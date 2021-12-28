@@ -29,7 +29,7 @@ export const getUserInventory = gql`
           ...TokenFields
         }
       }
-      tokens {
+      tokens(first: 1000) {
         id
         quantity
         token {
