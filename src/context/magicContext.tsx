@@ -8,7 +8,7 @@ import { useCoingeckoPrice } from "@usedapp/coingecko";
 
 const BalanceContext = React.createContext<null | {
   magicBalance: BigNumber;
-  // usdPrice: string;
+  usdPrice: string;
   ethPrice: string;
   sushiModalOpen: boolean;
   setSushiModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
@@ -23,7 +23,7 @@ export const MagicProvider = ({ children }) => {
   const ethPrice = useCoingeckoPrice("magic", "eth") ?? "0";
 
   // maybe in the future we add ability to see both if requested
-  // const usdPrice = useCoingeckoPrice("magic", "usd") ?? "0";
+  const usdPrice = useCoingeckoPrice("magic", "usd") ?? "0";
 
   // crashes if you don't have a valid chainId (all chains except mainnet and arbi)
   const magicBalance =
@@ -33,7 +33,7 @@ export const MagicProvider = ({ children }) => {
     <BalanceContext.Provider
       value={{
         magicBalance,
-        // usdPrice,
+        usdPrice,
         ethPrice,
         sushiModalOpen,
         setSushiModalOpen,

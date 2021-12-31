@@ -49,7 +49,7 @@ export const UsdIcon = ({ className }: { className?: string }) => (
   <svg
     width="24"
     height="24"
-    fill="currentColor"
+    fill="none"
     viewBox="0 0 24 24"
     className={className}
   >

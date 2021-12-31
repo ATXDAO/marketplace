@@ -57,8 +57,34 @@ import { Contracts } from "../../../const";
 import { targetNftT } from "../../../types";
 import { Tooltip } from "../../../components/Tooltip";
 import { utils } from "ethers";
+import { EthIcon, SwapIcon, UsdIcon } from "../../../components/Icons";
 
 const MAX_ITEMS_PER_PAGE = 10;
+
+const CurrencySwitcher = ({ price }: { price: number }) => {
+  const [currency, setCurrency] = React.useState<"eth" | "usd">("eth");
+  const isEth = currency === "eth";
+  const { ethPrice, usdPrice } = useMagic();
+
+  return (
+    <div className="items-center inline-flex">
+      {!isEth && "$ "}
+      {formatNumber(price * parseFloat(isEth ? ethPrice : usdPrice))}
+      {isEth && " ETH"}
+      <button
+        className="flex ml-2 dark:text-gray-200 text-gray-500"
+        onClick={() => setCurrency(isEth ? "usd" : "eth")}
+      >
+        <SwapIcon className="h-4 w-4" />
+        {isEth ? (
+          <UsdIcon className="h-4 w-4" />
+        ) : (
+          <EthIcon className="h-4 w-4" />
+        )}
+      </button>
+    </div>
+  );
+};
 
 // const getRarity = (rank: number) => {
 //   if (rank >= 0 && rank <= 50) {
@@ -407,17 +433,16 @@ export default function Example() {
                           $MAGIC
                         </span>
                       </p>
-                      <p className="text-gray-500 text-sm mt-2">
+                      <div className="text-gray-500 text-sm mt-2">
                         ≈{" "}
-                        {formatNumber(
-                          Number(
+                        <CurrencySwitcher
+                          price={Number(
                             parseFloat(
                               formatEther(tokenInfo.lowestPrice[0].pricePerItem)
                             )
-                          ) * parseFloat(ethPrice)
-                        )}{" "}
-                        ETH
-                      </p>
+                          )}
+                        />
+                      </div>
                     </div>
 
                     <div className="mt-6">
@@ -1242,7 +1267,7 @@ const PurchaseItemModal = ({
               <dd className="text-base font-medium text-gray-900 dark:text-gray-100 flex flex-col items-end">
                 <p>{totalPrice} $MAGIC</p>
                 <p className="text-gray-500 text-sm mt-1">
-                  ≈ {formatNumber(totalPrice * parseFloat(ethPrice))} ETH
+                  ≈ <CurrencySwitcher price={totalPrice} />
                 </p>
               </dd>
             </div>
