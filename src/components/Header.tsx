@@ -15,7 +15,6 @@ import {
 } from "@yuyao17/corefork";
 import { formatEther } from "ethers/lib/utils";
 import { formatNumber } from "../utils";
-import * as HoverCard from "@radix-ui/react-hover-card";
 import { Modal } from "./Modal";
 import { Item } from "react-stately";
 import { SearchAutocomplete } from "./SearchAutocomplete";

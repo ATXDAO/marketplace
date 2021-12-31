@@ -4,10 +4,12 @@ import { Contracts } from "../const";
 import { Zero } from "@ethersproject/constants";
 import { BigNumber } from "@ethersproject/bignumber";
 import { useChainId } from "../lib/hooks";
+import { useCoingeckoPrice } from "@usedapp/coingecko";
 
 const BalanceContext = React.createContext<null | {
   magicBalance: BigNumber;
-  magicPrice: number;
+  // usdPrice: string;
+  ethPrice: string;
   sushiModalOpen: boolean;
   setSushiModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }>(null);
@@ -16,31 +18,12 @@ export const MagicProvider = ({ children }) => {
   const { account } = useEthers();
   const chainId = useChainId();
 
-  const [price, setPrice] = React.useState<number>(0);
   const [sushiModalOpen, setSushiModalOpen] = React.useState(false);
 
-  React.useEffect(() => {
-    const fetchMagicPrice = async () => {
-      try {
-        const res = await fetch(
-          "https://api.coingecko.com/api/v3/simple/price?ids=magic&vs_currencies=usd"
-        );
+  const ethPrice = useCoingeckoPrice("magic", "eth") ?? "0";
 
-        const data = await res.json();
-
-        setPrice(data.magic.usd);
-      } catch (e) {
-        // If we can't fetch the price (e.g. api limit), just use the previous value
-        setPrice((price) => price);
-      }
-    };
-
-    fetchMagicPrice();
-
-    const interval = setInterval(fetchMagicPrice, 1000 * 60); // fetch every minute
-
-    return () => clearInterval(interval);
-  }, []);
+  // maybe in the future we add ability to see both if requested
+  // const usdPrice = useCoingeckoPrice("magic", "usd") ?? "0";
 
   // crashes if you don't have a valid chainId (all chains except mainnet and arbi)
   const magicBalance =
@@ -50,7 +33,8 @@ export const MagicProvider = ({ children }) => {
     <BalanceContext.Provider
       value={{
         magicBalance,
-        magicPrice: price,
+        // usdPrice,
+        ethPrice,
         sushiModalOpen,
         setSushiModalOpen,
       }}

@@ -95,7 +95,7 @@ export default function Example() {
   });
   const [isTransferModalOpen, setTransferModalOpen] =
     React.useState<boolean>(false);
-  const { magicPrice } = useMagic();
+  const { ethPrice } = useMagic();
 
   const formattedTokenId = Array.isArray(tokenId) ? tokenId[0] : tokenId;
   const chainId = useChainId();
@@ -408,14 +408,15 @@ export default function Example() {
                         </span>
                       </p>
                       <p className="text-gray-500 text-sm mt-2">
-                        ≈ $
+                        ≈{" "}
                         {formatNumber(
                           Number(
                             parseFloat(
                               formatEther(tokenInfo.lowestPrice[0].pricePerItem)
                             )
-                          ) * magicPrice
-                        )}
+                          ) * parseFloat(ethPrice)
+                        )}{" "}
+                        ETH
                       </p>
                     </div>
 
@@ -493,7 +494,7 @@ export default function Example() {
                                       scope="col"
                                       className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider whitespace-nowrap hidden lg:table-cell"
                                     >
-                                      USD Unit Price
+                                      ETH Unit Price
                                     </th>
                                     <th
                                       scope="col"
@@ -536,7 +537,7 @@ export default function Example() {
                                             {formatPrice(listing.pricePerItem)}
                                           </td>
                                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-700 hidden lg:table-cell">
-                                            ≈ $
+                                            ≈{" "}
                                             {formatNumber(
                                               Number(
                                                 parseFloat(
@@ -544,8 +545,9 @@ export default function Example() {
                                                     listing.pricePerItem
                                                   )
                                                 )
-                                              ) * magicPrice
-                                            )}
+                                              ) * parseFloat(ethPrice)
+                                            )}{" "}
+                                            ETH
                                           </td>
                                           <td className="px-6 py-4 whitespace-nowrap text-[0.7rem] md:text-sm text-gray-500 dark:text-gray-700">
                                             {listing.quantity}
@@ -1127,7 +1129,7 @@ const PurchaseItemModal = ({
 
   const router = useRouter();
   const { address } = router.query;
-  const { magicBalance, magicPrice, setSushiModalOpen } = useMagic();
+  const { magicBalance, ethPrice, setSushiModalOpen } = useMagic();
 
   const normalizedAddress = Array.isArray(address)
     ? address[0]
@@ -1240,7 +1242,7 @@ const PurchaseItemModal = ({
               <dd className="text-base font-medium text-gray-900 dark:text-gray-100 flex flex-col items-end">
                 <p>{totalPrice} $MAGIC</p>
                 <p className="text-gray-500 text-sm mt-1">
-                  ≈ ${formatNumber(totalPrice * magicPrice)}
+                  ≈ {formatNumber(totalPrice * parseFloat(ethPrice))} ETH
                 </p>
               </dd>
             </div>
