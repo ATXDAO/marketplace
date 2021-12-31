@@ -555,58 +555,60 @@ const Collection = () => {
                 {collectionData.collection.name}
               </h1>
               <div className="mt-12 overflow-hidden flex flex-col">
-                <dl className="-mx-8 -mt-8 flex flex-wrap divide-x-2">
-                  <div className="flex flex-col px-8 pt-8">
-                    <dt className="order-2 text-xs sm:text-base font-medium text-gray-500 dark:text-gray-400 mt-2">
+                <dl className="sm:-mx-8 -mt-8 flex divide-x-2">
+                  <div className="flex flex-col px-6 sm:px-8 pt-8">
+                    <dt className="order-2 text-[0.4rem] sm:text-base font-medium text-gray-500 dark:text-gray-400 mt-2 sm:mt-4">
                       Floor Price ({floorCurrency === "eth" ? "ETH" : "$MAGIC"})
                     </dt>
                     <dd className="order-1 text-base font-extrabold text-red-600 dark:text-gray-200 sm:text-3xl flex items-baseline">
-                      {floorCurrency === "eth"
-                        ? formatNumber(
-                            Number(
-                              parseFloat(
-                                formatEther(statData.collection.floorPrice)
-                              )
-                            ) * parseFloat(ethPrice)
-                          )
-                        : formatPrice(statData.collection.floorPrice)}
+                      <span className="capsize">
+                        {floorCurrency === "eth"
+                          ? formatNumber(
+                              Number(
+                                parseFloat(
+                                  formatEther(statData.collection.floorPrice)
+                                )
+                              ) * parseFloat(ethPrice)
+                            )
+                          : formatPrice(statData.collection.floorPrice)}
+                      </span>
                       <button
-                        className="flex ml-2"
+                        className="flex ml-2 self-end"
                         onClick={() =>
                           setFloorCurrency((currency) =>
                             currency === "eth" ? "magic" : "eth"
                           )
                         }
                       >
-                        <SwapIcon className="h-4 w-4" />
+                        <SwapIcon className="h-[0.6rem] w-[0.6rem] sm:h-4 sm:w-4" />
                         {floorCurrency === "eth" ? (
-                          <MagicIcon className="h-4 w-4" />
+                          <MagicIcon className="h-[0.6rem] w-[0.6rem] sm:h-4 sm:w-4" />
                         ) : (
-                          <EthIcon className="h-4 w-4" />
+                          <EthIcon className="h-[0.6rem] w-[0.6rem] sm:h-4 sm:w-4" />
                         )}
                       </button>
                     </dd>
                   </div>
-                  <div className="flex flex-col px-8 pt-8">
-                    <dt className="order-2 text-xs sm:text-base font-medium text-gray-500 dark:text-gray-400 mt-2">
+                  <div className="flex flex-col px-6 sm:px-8 pt-8">
+                    <dt className="order-2 text-[0.4rem] sm:text-base font-medium text-gray-500 dark:text-gray-400 mt-2 sm:mt-4">
                       Total Listings
                     </dt>
-                    <dd className="order-1 text-base font-extrabold text-red-600 dark:text-gray-200 sm:text-3xl">
+                    <dd className="order-1 text-base font-extrabold text-red-600 dark:text-gray-200 sm:text-3xl capsize">
                       {statData.collection.totalListings}
                     </dd>
                   </div>
-                  <div className="flex flex-col px-8 pt-8">
-                    <dt className="order-2 text-xs sm:text-base font-medium text-gray-500 dark:text-gray-400 mt-2">
+                  <div className="flex flex-col px-6 sm:px-8 pt-8">
+                    <dt className="order-2 text-[0.4rem] sm:text-base font-medium text-gray-500 dark:text-gray-400 mt-2 sm:mt-4">
                       Volume ($MAGIC)
                     </dt>
-                    <dd className="order-1 text-base font-extrabold text-red-600 dark:text-gray-200 sm:text-3xl">
+                    <dd className="order-1 text-base font-extrabold text-red-600 dark:text-gray-200 sm:text-3xl capsize">
                       {abbreviatePrice(statData.collection.totalVolume)}
                     </dd>
                   </div>
                 </dl>
                 {isERC1155 && statData.collection.totalListings > 0 && (
                   <button
-                    className="text-[0.5rem] sm:text-xs block underline place-self-start mt-2 dark:text-gray-300"
+                    className="ml-6 sm:ml-0 text-[0.4rem] sm:text-xs block underline place-self-start mt-2 dark:text-gray-300"
                     onClick={() => setDetailedFloorPriceModalOpen(true)}
                   >
                     Compare floor prices &gt;
