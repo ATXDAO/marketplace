@@ -38,6 +38,8 @@ import { Item } from "react-stately";
 import Listings from "../../../components/Listings";
 import Button from "../../../components/Button";
 import { userFriendlyRouteToAddress, useChainId } from "../../../lib/hooks";
+import { EthIcon, MagicIcon, SwapIcon } from "../../../components/Icons";
+import { useMagic } from "../../../context/magicContext";
 
 const MAX_ITEMS_PER_PAGE = 42;
 
@@ -238,9 +240,10 @@ const Collection = () => {
   const [isDetailedFloorPriceModalOpen, setDetailedFloorPriceModalOpen] =
     useState(false);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
-
+  const [floorCurrency, setFloorCurrency] = useState<"magic" | "eth">("magic");
   const filters = getInititalFilters(formattedSearch);
   const chainId = useChainId();
+  const { ethPrice } = useMagic();
 
   const sortParam = sort ?? OrderDirection.Asc;
   const activitySortParam = activitySort ?? "time";
@@ -555,10 +558,33 @@ const Collection = () => {
                 <dl className="-mx-8 -mt-8 flex flex-wrap divide-x-2">
                   <div className="flex flex-col px-8 pt-8">
                     <dt className="order-2 text-xs sm:text-base font-medium text-gray-500 dark:text-gray-400 mt-2">
-                      Floor Price ($MAGIC)
+                      Floor Price ({floorCurrency === "eth" ? "ETH" : "$MAGIC"})
                     </dt>
-                    <dd className="order-1 text-base font-extrabold text-red-600 dark:text-gray-200 sm:text-3xl">
-                      {formatPrice(statData.collection.floorPrice)}
+                    <dd className="order-1 text-base font-extrabold text-red-600 dark:text-gray-200 sm:text-3xl flex items-baseline">
+                      {floorCurrency === "eth"
+                        ? formatNumber(
+                            Number(
+                              parseFloat(
+                                formatEther(statData.collection.floorPrice)
+                              )
+                            ) * parseFloat(ethPrice)
+                          )
+                        : formatPrice(statData.collection.floorPrice)}
+                      <button
+                        className="flex ml-2"
+                        onClick={() =>
+                          setFloorCurrency((currency) =>
+                            currency === "eth" ? "magic" : "eth"
+                          )
+                        }
+                      >
+                        <SwapIcon className="h-4 w-4" />
+                        {floorCurrency === "eth" ? (
+                          <MagicIcon className="h-4 w-4" />
+                        ) : (
+                          <EthIcon className="h-4 w-4" />
+                        )}
+                      </button>
                     </dd>
                   </div>
                   <div className="flex flex-col px-8 pt-8">
