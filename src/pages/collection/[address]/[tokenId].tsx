@@ -141,7 +141,7 @@ export default function Example() {
         tokenId: formattedTokenId,
       }),
     {
-      enabled: !!formattedAddress || !!tokenId,
+      enabled: formattedAddress !== AddressZero && Boolean(formattedTokenId),
       refetchInterval: false,
     }
   );
