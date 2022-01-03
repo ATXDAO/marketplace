@@ -22,7 +22,6 @@ export const MagicProvider = ({ children }) => {
 
   const ethPrice = useCoingeckoPrice("magic", "eth") ?? "0";
 
-  // maybe in the future we add ability to see both if requested
   const usdPrice = useCoingeckoPrice("magic", "usd") ?? "0";
 
   // crashes if you don't have a valid chainId (all chains except mainnet and arbi)
