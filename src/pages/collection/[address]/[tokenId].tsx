@@ -131,7 +131,7 @@ export default function Example() {
     : slugToAddress(slugOrAddress?.toLowerCase() ?? AddressZero, chainId);
 
   const { data, isLoading, isIdle } = useQuery(
-    "details",
+    ["details", formattedAddress],
     () =>
       client.getTokenDetails({
         collectionId: formattedAddress,
@@ -1151,12 +1151,12 @@ const PurchaseItemModal = ({
   const chainId = useChainId();
 
   const router = useRouter();
-  const { address } = router.query;
+  const { address: slugOrAddress } = router.query;
   const { magicBalance, ethPrice, setSushiModalOpen } = useMagic();
 
-  const normalizedAddress = Array.isArray(address)
-    ? address[0]
-    : address ?? AddressZero;
+  const normalizedAddress = Array.isArray(slugOrAddress)
+    ? slugToAddress(slugOrAddress[0], chainId)
+    : slugToAddress(slugOrAddress ?? AddressZero, chainId);
 
   const totalPrice =
     quantity * Number(parseFloat(formatEther(targetNft.payload.pricePerItem)));

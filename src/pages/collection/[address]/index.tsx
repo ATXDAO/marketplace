@@ -261,7 +261,7 @@ const Collection = () => {
   const formattedTab = tab ? (Array.isArray(tab) ? tab[0] : tab) : "collection";
 
   const { data: activityData, isLoading: isActivityLoading } = useQuery(
-    ["activity", { slugOrAddress, activitySortParam }],
+    ["activity", { formattedAddress, activitySortParam }],
     () =>
       client.getActivity({
         id: formattedAddress,
@@ -319,7 +319,7 @@ const Collection = () => {
     isLoading: isListingLoading,
     fetchNextPage,
   } = useInfiniteQuery(
-    ["listings", { slugOrAddress, sortParam, searchParams, search }],
+    ["listings", { formattedAddress, sortParam, searchParams, search }],
     ({ queryKey, pageParam = 0 }) =>
       client.getCollectionListings({
         id: formattedAddress,
