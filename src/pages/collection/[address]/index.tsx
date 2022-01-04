@@ -19,7 +19,6 @@ import {
   formatPercent,
   formatPrice,
   generateIpfsLink,
-  slugToAddress,
 } from "../../../utils";
 import { formatEther } from "ethers/lib/utils";
 import Image from "next/image";
@@ -38,7 +37,7 @@ import { SearchAutocomplete } from "../../../components/SearchAutocomplete";
 import { Item } from "react-stately";
 import Listings from "../../../components/Listings";
 import Button from "../../../components/Button";
-import { useChainId } from "../../../lib/hooks";
+import { userFriendlyRouteToAddress, useChainId } from "../../../lib/hooks";
 import { EthIcon, MagicIcon, SwapIcon } from "../../../components/Icons";
 import { useMagic } from "../../../context/magicContext";
 
@@ -234,13 +233,7 @@ const removeFilter = (
 
 const Collection = () => {
   const router = useRouter();
-  const {
-    address: slugOrAddress,
-    sort,
-    tab,
-    activitySort,
-    search,
-  } = router.query;
+  const { address, sort, tab, activitySort, search } = router.query;
   const formattedSearch = Array.isArray(search) ? search[0] : search;
   const [searchToken, setSearchToken] = useState("");
   const [searchParams, setSearchParams] = useState("");
@@ -254,14 +247,17 @@ const Collection = () => {
 
   const sortParam = sort ?? OrderDirection.Asc;
   const activitySortParam = activitySort ?? "time";
-  const formattedAddress = Array.isArray(slugOrAddress)
-    ? slugToAddress(slugOrAddress[0], chainId)
-    : slugToAddress(slugOrAddress?.toLowerCase() ?? AddressZero, chainId);
+  const formattedAddress = Array.isArray(address)
+    ? userFriendlyRouteToAddress(address[0], chainId)
+    : userFriendlyRouteToAddress(
+        address?.toLowerCase() ?? AddressZero,
+        chainId
+      );
 
   const formattedTab = tab ? (Array.isArray(tab) ? tab[0] : tab) : "collection";
 
   const { data: activityData, isLoading: isActivityLoading } = useQuery(
-    ["activity", { slugOrAddress, activitySortParam }],
+    ["activity", { address, activitySortParam }],
     () =>
       client.getActivity({
         id: formattedAddress,
@@ -319,7 +315,7 @@ const Collection = () => {
     isLoading: isListingLoading,
     fetchNextPage,
   } = useInfiniteQuery(
-    ["listings", { slugOrAddress, sortParam, searchParams, search }],
+    ["listings", { address, sortParam, searchParams, search }],
     ({ queryKey, pageParam = 0 }) =>
       client.getCollectionListings({
         id: formattedAddress,
@@ -484,7 +480,7 @@ const Collection = () => {
                                           name={value}
                                           onChange={(e) => {
                                             router.replace({
-                                              pathname: `/collection/${slugOrAddress}`,
+                                              pathname: `/collection/${formattedAddress}`,
                                               query: {
                                                 search: e.target.checked
                                                   ? createFilter(
@@ -536,7 +532,7 @@ const Collection = () => {
                   <Button
                     onClick={() =>
                       router.replace({
-                        pathname: `/collection/${slugOrAddress}`,
+                        pathname: `/collection/${formattedAddress}`,
                         query: {
                           search: "",
                         },
@@ -730,7 +726,7 @@ const Collection = () => {
                                           name={value}
                                           onChange={(e) => {
                                             router.replace({
-                                              pathname: `/collection/${slugOrAddress}`,
+                                              pathname: `/collection/${formattedAddress}`,
                                               query: {
                                                 search: e.target.checked
                                                   ? createFilter(
@@ -782,7 +778,7 @@ const Collection = () => {
                     <Button
                       onClick={() =>
                         router.replace({
-                          pathname: `/collection/${slugOrAddress}`,
+                          pathname: `/collection/${formattedAddress}`,
                           query: {
                             search: "",
                           },
@@ -933,7 +929,7 @@ const Collection = () => {
                                     }
                                   />
                                   <Link
-                                    href={`/collection/${slugOrAddress}/${token.tokenId}`}
+                                    href={`/collection/${formattedAddress}/${token.tokenId}`}
                                     passHref
                                   >
                                     <a className="absolute inset-0 focus:outline-none">
@@ -991,7 +987,7 @@ const Collection = () => {
                                   className="w-full h-full object-center object-fill group-hover:opacity-75"
                                 />
                                 <Link
-                                  href={`/collection/${slugOrAddress}/${listing.token.tokenId}`}
+                                  href={`/collection/${formattedAddress}/${listing.token.tokenId}`}
                                 >
                                   <a className="absolute inset-0 focus:outline-none">
                                     <span className="sr-only">

@@ -29,6 +29,7 @@ import {
   useBuyItem,
   useChainId,
   useTransferNFT,
+  userFriendlyRouteToAddress,
 } from "../../../lib/hooks";
 import { CenterLoadingDots } from "../../../components/CenterLoadingDots";
 import {
@@ -37,7 +38,6 @@ import {
   formatPrice,
   formattable,
   generateIpfsLink,
-  slugToAddress,
 } from "../../../utils";
 import {
   GetTokenDetailsQuery,
@@ -111,7 +111,7 @@ export default function Example() {
   const { account } = useEthers();
   const queryClient = useQueryClient();
 
-  const { address: slugOrAddress, tokenId } = router.query;
+  const { address, tokenId } = router.query;
   const [modalProps, setModalProps] = React.useState<{
     isOpen: boolean;
     targetNft: targetNftT | null;
@@ -126,9 +126,12 @@ export default function Example() {
   const formattedTokenId = Array.isArray(tokenId) ? tokenId[0] : tokenId;
   const chainId = useChainId();
 
-  const formattedAddress = Array.isArray(slugOrAddress)
-    ? slugToAddress(slugOrAddress[0], chainId)
-    : slugToAddress(slugOrAddress?.toLowerCase() ?? AddressZero, chainId);
+  const formattedAddress = Array.isArray(address)
+    ? userFriendlyRouteToAddress(address[0], chainId)
+    : userFriendlyRouteToAddress(
+        address?.toLowerCase() ?? AddressZero,
+        chainId
+      );
 
   const { data, isLoading, isIdle } = useQuery(
     "details",
@@ -257,7 +260,7 @@ export default function Example() {
             <h3 className="mt-24 lg:mt-2 text-sm font-medium text-gray-900 dark:text-gray-400">
               Sorry, we couldn&apos;t find this item. 😞
             </h3>
-            <Link href={`/collection/${slugOrAddress}`}>
+            <Link href={`/collection/${formattedAddress}`}>
               <a className="mt-7 inline-flex space-x-2 items-center text-red-500 hover:underline dark:text-gray-100">
                 <ArrowLeftIcon className="h-4 w-4" />
                 <p className="capsize">Back to Collection</p>
@@ -267,7 +270,7 @@ export default function Example() {
         )}
         {data?.collection && tokenInfo && (
           <>
-            <Link href={`/collection/${slugOrAddress}`} passHref>
+            <Link href={`/collection/${formattedAddress}`} passHref>
               <a className="text-gray-600 dark:text-gray-400 dark:hover:text-gray-500 inline-flex items-center space-x-2 hover:text-gray-800">
                 <ArrowLeftIcon className="h-3 w-3" />
                 <p className="capsize text-xs">Back to Collection</p>
@@ -340,7 +343,7 @@ export default function Example() {
                                     <Link
                                       key={attribute.id}
                                       href={{
-                                        pathname: `/collection/${slugOrAddress}`,
+                                        pathname: `/collection/${formattedAddress}`,
                                         query: {
                                           search: new URLSearchParams({
                                             [attribute.name]: attribute.value,
@@ -700,7 +703,7 @@ export default function Example() {
                                     <Link
                                       key={attribute.id}
                                       href={{
-                                        pathname: `/collection/${slugOrAddress}`,
+                                        pathname: `/collection/${formattedAddress}`,
                                         query: {
                                           search: new URLSearchParams({
                                             [attribute.name]: attribute.value,
@@ -1033,12 +1036,11 @@ const TransferNFTModal = ({
   const router = useRouter();
 
   const { account } = useEthers();
-  const { address: slugOrAddress, tokenId } = router.query;
+  const { address, tokenId } = router.query;
 
-  const chainId = useChainId();
-  const normalizedAddress = Array.isArray(slugOrAddress)
-    ? slugToAddress(slugOrAddress[0], chainId)
-    : slugToAddress(slugOrAddress ?? AddressZero, chainId);
+  const normalizedAddress = Array.isArray(address)
+    ? address[0]
+    : address ?? AddressZero;
 
   const normalizedTokenId = Array.isArray(tokenId)
     ? tokenId[0]

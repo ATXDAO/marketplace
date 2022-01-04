@@ -28,7 +28,6 @@ import WalletConnectSvg from "../../public/img/walletconnect.svg";
 import Image from "next/image";
 import { WalletConnectConnector } from "@web3-react/walletconnect-connector";
 import { useCollections } from "../lib/hooks";
-import { getCollectionSlugFromName } from "../utils";
 
 const walletconnect = new WalletConnectConnector({
   rpc: {
@@ -191,13 +190,9 @@ const Header = () => {
                         )
                         .map((collection) => {
                           const active = collection.address === address;
-                          const slugOrAddress =
-                            getCollectionSlugFromName(collection.name) ??
-                            collection.address;
-
                           return (
                             <Link
-                              href={`/collection/${slugOrAddress}`}
+                              href={`/collection/${collection.address}`}
                               passHref
                               key={collection.name}
                             >
@@ -226,12 +221,9 @@ const Header = () => {
                           );
 
                           if (targetCollection) {
-                            const slugOrAddress =
-                              getCollectionSlugFromName(
-                                targetCollection.name
-                              ) ?? targetCollection.address;
-
-                            router.push(`/collection/${slugOrAddress}`);
+                            router.push(
+                              `/collection/${targetCollection.address}`
+                            );
                           }
                         }}
                       >
