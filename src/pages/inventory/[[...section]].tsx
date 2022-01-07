@@ -54,10 +54,9 @@ const dates = [
   { id: 4, label: "3 Months", value: addMonths(new Date(), 3) },
 ];
 
-const tabs = [
+const defaultTabs = [
   { name: "Collected", href: "/inventory" },
   { name: "Listed", href: "/inventory/listed" },
-  { name: "Hidden", href: "/inventory/hidden" },
   { name: "Sold", href: "/inventory/sold" },
 ];
 
@@ -82,7 +81,7 @@ const Drawer = ({
           closestIndexTo(
             new Date(Number(nft.listing.expires)),
             dates.map(({ value }) => value)
-          )
+          ) ?? 3
         ]
       : dates[3]
   );
@@ -586,8 +585,8 @@ const Inventory = () => {
     );
 
     switch (section) {
-      case "hidden":
-        return [hidden, totals, updates, "No hidden listings 🙂"] as const;
+      case "staked":
+        return [hidden, totals, updates, "No staked listings 🙂"] as const;
       case "listed":
         return [listings, totals, empty, "No NFTs listed 🙂"] as const;
       case "sold":
@@ -596,6 +595,14 @@ const Inventory = () => {
         return [tokens, totals, updates, null] as const;
     }
   }, [inventory.data?.user, section]);
+
+  const tabs = useMemo(() => {
+    if (inventory.data?.user?.hidden.length) {
+      return [...defaultTabs, { name: "Staked", href: "/inventory/staked" }];
+    }
+
+    return defaultTabs;
+  }, [inventory.data?.user]);
 
   const collections = data.map(({ token: { collection } }) => collection);
   const approvals = useContractApprovals(

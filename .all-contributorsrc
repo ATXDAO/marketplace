@@ -32,7 +32,8 @@
       "avatar_url": "https://avatars.githubusercontent.com/u/95452264?v=4",
       "profile": "http://treasure.tools",
       "contributions": [
-        "doc"
+        "doc",
+        "code"
       ]
     },
     {
@@ -40,6 +41,24 @@
       "name": "Peita Lin",
       "avatar_url": "https://avatars.githubusercontent.com/u/4037878?v=4",
       "profile": "https://www.linkedin.com/in/peitalin",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "mmnavarr",
+      "name": "Malcolm",
+      "avatar_url": "https://avatars.githubusercontent.com/u/3385743?v=4",
+      "profile": "http://malcosaurus.com",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "Caranell",
+      "name": "Anton Lyachek",
+      "avatar_url": "https://avatars.githubusercontent.com/u/9637757?v=4",
+      "profile": "https://github.com/Caranell",
       "contributions": [
         "code"
       ]
