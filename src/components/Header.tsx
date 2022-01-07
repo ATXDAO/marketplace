@@ -5,7 +5,7 @@ import {
   SpeakerphoneIcon,
   ExclamationIcon,
 } from "@heroicons/react/outline";
-import { Dialog, Transition, Tab } from "@headlessui/react";
+import { Dialog, Transition } from "@headlessui/react";
 import Link from "next/link";
 import {
   useEthers,
@@ -347,93 +347,43 @@ const Header = () => {
         title="Convert between ETH and MAGIC"
         onClose={() => setSushiModalOpen(false)}
         isOpen={sushiModalOpen}
-        className="lg:max-w-3xl "
+        className="lg:max-w-3xl"
       >
         <div>
-          <Tab.Group defaultIndex={0}>
-            <Tab.List className="flex justify-center space-x-4 py-6">
-              <Tab
-                className={({ selected }) =>
-                  classNames(
-                    selected
-                      ? "bg-red-100 text-red-700"
-                      : "text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-100",
-                    "px-3 py-2 font-medium text-sm rounded-md"
-                  )
-                }
-              >
-                Arbitrum Swaps
-              </Tab>
-              <Tab
-                className={({ selected }) =>
-                  classNames(
-                    selected
-                      ? "bg-red-100 text-red-700"
-                      : "text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-100",
-                    "px-3 py-2 font-medium text-sm rounded-md"
-                  )
-                }
-              >
-                Anychain Swaps
-              </Tab>
-            </Tab.List>
-            <Tab.Panels>
-              <Tab.Panel>
-                <div className="h-[400px] sm:h-[610px]">
-                  <iframe
-                    src="https://app.sushi.com/swap?inputCurrency=&outputCurrency=0x539bdE0d7Dbd336b79148AA742883198BBF60342"
-                    width="100%"
-                    style={{
-                      border: 0,
-                      borderRadius: "10px",
-                      margin: "0px auto",
-                      display: "block",
-                      width: "100%",
-                      height: "100%",
-                      zIndex: 1,
-                    }}
-                  />
-                </div>
-              </Tab.Panel>
-              <Tab.Panel>
-                <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
-                  <div className="flex">
-                    <div className="flex-shrink-0">
-                      <ExclamationIcon
-                        className="h-5 w-5 text-yellow-400"
-                        aria-hidden="true"
-                      />
-                    </div>
-                    <div className="ml-3">
-                      <p className="text-[0.7rem] text-left lg:text-xs text-yellow-700">
-                        As bridging services involve third parties, there may be
-                        rare instances where funds are stuck for up to 3 days
-                        (max) if there is an outage from the service provider.
-                        However, the users funds are always safely locked on the
-                        chain.
-                      </p>
-                    </div>
-                  </div>
-                </div>
+          <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mt-4">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <ExclamationIcon
+                  className="h-5 w-5 text-yellow-400"
+                  aria-hidden="true"
+                />
+              </div>
+              <div className="ml-3">
+                <p className="text-[0.7rem] text-left lg:text-xs text-yellow-700">
+                  As bridging services involve third parties, there may be rare
+                  instances where funds are stuck for up to 3 days (max) if
+                  there is an outage from the service provider. However, the
+                  users funds are always safely locked on the chain.
+                </p>
+              </div>
+            </div>
+          </div>
 
-                <div className="h-[400px] sm:h-[610px] mt-4">
-                  <iframe
-                    src="https://li.finance/?fromChain=eth&toChain=arb&toToken=0x539bde0d7dbd336b79148aa742883198bbf60342"
-                    width="100%"
-                    style={{
-                      border: 0,
-                      borderRadius: "10px",
-                      margin: "0px auto",
-                      display: "block",
-                      width: "100%",
-                      height: "100%",
-                      zIndex: 1,
-                    }}
-                  />
-                </div>
-              </Tab.Panel>
-            </Tab.Panels>
-          </Tab.Group>
+          <div className="h-[400px] sm:h-[610px] mt-4">
+            <iframe
+              src="https://li.finance/embed?fromChain=arb&toChain=arb&toToken=0x539bde0d7dbd336b79148aa742883198bbf60342"
+              width="100%"
+              style={{
+                border: 0,
+                borderRadius: "10px",
+                margin: "0px auto",
+                display: "block",
+                width: "100%",
+                height: "100%",
+                zIndex: 1,
+              }}
+            />
+          </div>
         </div>
       </Modal>
       <Modal
