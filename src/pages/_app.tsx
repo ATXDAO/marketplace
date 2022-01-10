@@ -95,7 +95,7 @@ function MyApp({ Component, pageProps }) {
         <meta name="theme-color" content="#ffffff" />
         <script async src="https://cdn.splitbee.io/sb.js"></script>
       </Head>
-      <ThemeProvider attribute="class">
+      <ThemeProvider attribute="class" defaultTheme="light">
         <SSRProvider>
           <DAppProvider config={config}>
             <MagicProvider>
