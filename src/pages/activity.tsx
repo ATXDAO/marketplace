@@ -16,8 +16,8 @@ const Activity = () => {
     client.getAllActivities({
       orderBy:
         sortParam === "price"
-          ? Listing_OrderBy.PricePerItem
-          : Listing_OrderBy.BlockTimestamp,
+          ? Listing_OrderBy.pricePerItem
+          : Listing_OrderBy.blockTimestamp,
     })
   );
 

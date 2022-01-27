@@ -153,7 +153,7 @@ export default function Example() {
       }),
     {
       enabled:
-        !!account && data?.collection?.standard === TokenStandard.Erc1155,
+        !!account && data?.collection?.standard === TokenStandard.ERC1155,
       refetchInterval: false,
     }
   );
@@ -175,7 +175,7 @@ export default function Example() {
       enabled:
         !!formattedAddress &&
         !!tokenId &&
-        data?.collection?.standard === TokenStandard.Erc1155,
+        data?.collection?.standard === TokenStandard.ERC1155,
       getNextPageParam: (_, pages) => pages.length * MAX_ITEMS_PER_PAGE,
     }
   );
@@ -231,7 +231,7 @@ export default function Example() {
   const loading = isLoading || isIdle;
 
   const isYourListing =
-    data?.collection?.standard === TokenStandard.Erc721 &&
+    data?.collection?.standard === TokenStandard.ERC721 &&
     addressEqual(
       account ?? AddressZero,
       tokenInfo?.owner ? tokenInfo.owner.id : AddressZero
@@ -246,7 +246,7 @@ export default function Example() {
 
   const showTransfer =
     isYourListing ||
-    (data?.collection?.standard === TokenStandard.Erc1155 && hasErc1155Token);
+    (data?.collection?.standard === TokenStandard.ERC1155 && hasErc1155Token);
 
   return (
     <div className="pt-12">
@@ -399,7 +399,7 @@ export default function Example() {
                     {tokenInfo.metadata?.name ?? ""}
                   </h2>
                 </div>
-                {data.collection.standard === TokenStandard.Erc721 &&
+                {data.collection.standard === TokenStandard.ERC721 &&
                   tokenInfo.owner &&
                   account && (
                     <div className="mt-2 text-xs text-gray-400">
@@ -479,7 +479,7 @@ export default function Example() {
                   </div>
                 )}
 
-                {data.collection.standard === TokenStandard.Erc1155 && (
+                {data.collection.standard === TokenStandard.ERC1155 && (
                   <div className="mt-10">
                     <p>Listings</p>
                     {isListingLoading && <CenterLoadingDots className="h-60" />}
@@ -796,7 +796,7 @@ export default function Example() {
                                 </dd>
                               </div>
                               {data.collection?.standard ===
-                                TokenStandard.Erc721 && (
+                                TokenStandard.ERC721 && (
                                 <div className="sm:col-span-1">
                                   <dt className="text-sm font-medium text-gray-500">
                                     Rank
@@ -1048,7 +1048,7 @@ const TransferNFTModal = ({
   }, [router, transferState.status]);
 
   const tokenQuantityLeft =
-    standard === TokenStandard.Erc1155 && token?.quantity;
+    standard === TokenStandard.ERC1155 && token?.quantity;
 
   return (
     <Modal onClose={onClose} isOpen={isOpen} title={`Transfer ${title}`}>
@@ -1106,7 +1106,7 @@ const TransferNFTModal = ({
         disabled={!utils.isAddress(recipientAddress)}
         onClick={() => {
           if (account) {
-            standard === TokenStandard.Erc721
+            standard === TokenStandard.ERC721
               ? transfer(account, recipientAddress, normalizedTokenId)
               : transfer(account, recipientAddress, tokenId, quantity, 0x0);
           }
@@ -1208,7 +1208,7 @@ const PurchaseItemModal = ({
                   </div>
                 </div>
 
-                {payload.standard === TokenStandard.Erc1155 && (
+                {payload.standard === TokenStandard.ERC1155 && (
                   <div className="flex-1 pt-4 flex items-end justify-between">
                     <p className="mt-1 text-xs font-medium text-gray-900 dark:text-gray-100">
                       {formatEther(payload.pricePerItem)} $MAGIC{" "}

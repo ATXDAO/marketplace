@@ -171,7 +171,7 @@ export function useCollections(): Array<{ address: string; name: string }> {
 }
 
 export function useTransferNFT(contract: string, standard: TokenStandard) {
-  const isERC721 = standard === TokenStandard.Erc721;
+  const isERC721 = standard === TokenStandard.ERC721;
 
   const transfer = useContractFunction(
     new Contract(contract, isERC721 ? abis.erc721 : abis.erc1155),
@@ -199,7 +199,7 @@ export function useApproveContract(contract: string, standard: TokenStandard) {
   const approve = useContractFunction(
     new Contract(
       contract,
-      standard === TokenStandard.Erc721 ? abis.erc721 : abis.erc1155
+      standard === TokenStandard.ERC721 ? abis.erc721 : abis.erc1155
     ),
     "setApprovalForAll"
   );

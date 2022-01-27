@@ -7,3 +7,6 @@ generates:
       - "typescript"
       - "typescript-operations"
       - "typescript-graphql-request"
+config:
+  namingConvention:
+    enumValues: keep

@@ -69,19 +69,19 @@ function assertUnreachable(): never {
 
 const MapSortToOrder = (sort: string) => {
   if (sort === "latest") {
-    return Listing_OrderBy.BlockTimestamp;
+    return Listing_OrderBy.blockTimestamp;
   }
 
-  return Listing_OrderBy.PricePerItem;
+  return Listing_OrderBy.pricePerItem;
 };
 
 const MapSortToEnum = (sort: string) => {
   switch (sort) {
     case "asc":
-      return OrderDirection.Asc;
+      return OrderDirection.asc;
     case "desc":
     case "latest":
-      return OrderDirection.Desc;
+      return OrderDirection.desc;
   }
   return assertUnreachable();
 };
@@ -251,7 +251,7 @@ const Collection = () => {
   const chainId = useChainId();
   const { ethPrice } = useMagic();
 
-  const sortParam = sort ?? OrderDirection.Asc;
+  const sortParam = sort ?? OrderDirection.asc;
   const activitySortParam = activitySort ?? "time";
   const formattedAddress = Array.isArray(slugOrAddress)
     ? slugToAddress(slugOrAddress[0], chainId)
@@ -266,8 +266,8 @@ const Collection = () => {
         id: formattedAddress,
         orderBy:
           activitySortParam === "price"
-            ? Listing_OrderBy.PricePerItem
-            : Listing_OrderBy.BlockTimestamp,
+            ? Listing_OrderBy.pricePerItem
+            : Listing_OrderBy.blockTimestamp,
       }),
     {
       enabled: formattedTab === "activity",
@@ -311,7 +311,7 @@ const Collection = () => {
   }, []);
 
   const isERC1155 =
-    collectionData?.collection?.standard === TokenStandard.Erc1155;
+    collectionData?.collection?.standard === TokenStandard.ERC1155;
 
   const {
     data: listingData,
@@ -331,10 +331,10 @@ const Collection = () => {
         filter: formatSearchFilter(formattedSearch),
         orderBy: sort
           ? MapSortToOrder(Array.isArray(sort) ? sort[0] : sort)
-          : Listing_OrderBy.PricePerItem,
+          : Listing_OrderBy.pricePerItem,
         orderDirection: sort
           ? MapSortToEnum(Array.isArray(sort) ? sort[0] : sort)
-          : OrderDirection.Asc,
+          : OrderDirection.asc,
       }),
     {
       enabled: !!formattedAddress && !!collectionData,
