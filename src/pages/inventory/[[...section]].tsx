@@ -85,6 +85,7 @@ const Drawer = ({
         ]
       : dates[3]
   );
+  const [priceBelowFloorWarning, setPriceBelowFloorWarning] = useState(false);
   const [show, toggle] = useReducer((value) => !value, true);
 
   const approveContract = useApproveContract(nft.address, nft.standard);
@@ -99,6 +100,17 @@ const Drawer = ({
       removeListing.state.status,
       updateListing.state.status,
     ].includes("Mining");
+
+  const { data: statData } = useQuery(
+    ["stats", nft.address],
+    () =>
+      client.getCollectionStats({
+        id: nft.address,
+      }),
+    {
+      enabled: !!nft.address,
+    }
+  );
 
   useEffect(() => {
     if (
@@ -211,13 +223,24 @@ const Drawer = ({
                                   placeholder="0.00"
                                   maxLength={10}
                                   min="0"
+                                  autoComplete="off"
                                   aria-describedby="price-currency"
                                   onChange={(event) => {
                                     const { value, maxLength } = event.target;
                                     const price = value.slice(0, maxLength);
+                                    const emptyPrice = price === "";
                                     setPrice(
-                                      String(Math.abs(parseFloat(price)))
+                                      emptyPrice
+                                        ? ""
+                                        : String(Math.abs(parseFloat(price)))
                                     );
+
+                                    const warning =
+                                      !emptyPrice &&
+                                      Number(price) <
+                                        statData?.collection?.floorPrice /
+                                          10 ** 18;
+                                    setPriceBelowFloorWarning(warning);
                                   }}
                                   value={price}
                                   disabled={isFormDisabled}
@@ -231,39 +254,12 @@ const Drawer = ({
                                   </span>
                                 </div>
                               </div>
-                              <div
-                                className={classNames(
-                                  "space-y-1 mt-2 text-[0.5rem]",
-                                  {
-                                    "opacity-75": isFormDisabled,
-                                  }
-                                )}
-                              >
-                                <div className="flex justify-between px-2">
-                                  <p className="text-gray-400">
-                                    Royalties ({FEE * 100 + "%"})
-                                  </p>
-                                  <p>
-                                    ≈{" "}
-                                    {formatNumber(
-                                      parseFloat(price || "0") * FEE
-                                    )}{" "}
-                                    $MAGIC
-                                  </p>
-                                </div>
-                                <div className="flex justify-between px-2">
-                                  <p className="text-gray-400">
-                                    Your share ({USER_SHARE * 100 + "%"})
-                                  </p>
-                                  <p>
-                                    ≈{" "}
-                                    {formatNumber(
-                                      parseFloat(price || "0") * USER_SHARE
-                                    )}{" "}
-                                    $MAGIC
-                                  </p>
-                                </div>
-                              </div>
+                              <p className="flex text-red-600 text-[0.75rem] mt-1 h-[1rem]">
+                                {priceBelowFloorWarning &&
+                                  `Price is below floor of ${
+                                    statData?.collection?.floorPrice / 10 ** 18
+                                  } $MAGIC`}
+                              </p>
                             </div>
                             <div>
                               <Listbox
@@ -429,12 +425,43 @@ const Drawer = ({
                             )}
                           </div>
 
+                          <div
+                            className={classNames(
+                              "space-y-1 mt-2 text-[0.75rem]",
+                              {
+                                "opacity-75": isFormDisabled,
+                              }
+                            )}
+                          >
+                            <div className="flex justify-between px-2">
+                              <p className="text-gray-400">
+                                Royalties ({FEE * 100 + "%"})
+                              </p>
+                              <p>
+                                ≈ {formatNumber(parseFloat(price || "0") * FEE)}{" "}
+                                $MAGIC
+                              </p>
+                            </div>
+                            <div className="flex justify-between px-2">
+                              <p className="text-gray-400">
+                                Your share ({USER_SHARE * 100 + "%"})
+                              </p>
+                              <p>
+                                ≈{" "}
+                                {formatNumber(
+                                  parseFloat(price || "0") * USER_SHARE
+                                )}{" "}
+                                $MAGIC
+                              </p>
+                            </div>
+                          </div>
                           <div>
-                            {actions.map((action) => {
+                            {actions.map((action, idx) => {
                               switch (action) {
                                 case "create":
                                   return (
                                     <Button
+                                      key={idx}
                                       disabled={
                                         price.trim() === "" || isFormDisabled
                                       }
