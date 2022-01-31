@@ -217,7 +217,11 @@ export const getActivity = gql`
 export const getAllActivities = gql`
   ${LISTING_FRAGMENT}
   query getAllActivities($orderBy: Listing_orderBy!) {
-    listings(where: { status: Sold }, orderBy: $orderBy, orderDirection: desc) {
+    listings(
+      where: { status: Sold, collection_not: "" }
+      orderBy: $orderBy
+      orderDirection: desc
+    ) {
       ...ListingFields
     }
   }
