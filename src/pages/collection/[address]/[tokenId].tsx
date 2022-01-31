@@ -1134,7 +1134,8 @@ const PurchaseItemModal = ({
     address: string,
     ownerAddress: string,
     tokenId: number,
-    quantity: number
+    quantity: number,
+    pricePerItem: string
   ) => void;
 }) => {
   const [quantity, setQuantity] = React.useState(1);
@@ -1162,7 +1163,7 @@ const PurchaseItemModal = ({
   const magicAllowance = useTokenAllowance(
     Contracts[chainId].magic,
     account ?? AddressZero,
-    Contracts[chainId].marketplace
+    Contracts[chainId].marketplaceBuyer
   );
 
   const buttonRef = React.useRef() as React.MutableRefObject<HTMLButtonElement>;
@@ -1278,7 +1279,8 @@ const PurchaseItemModal = ({
                       normalizedAddress,
                       payload.user.id,
                       Number(payload.tokenId),
-                      quantity
+                      quantity,
+                      payload.pricePerItem
                     );
                   }}
                 >
