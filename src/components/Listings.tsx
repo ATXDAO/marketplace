@@ -197,6 +197,9 @@ const Listings = ({
                   const legionsMetadata = legionMetadataData?.tokens.find(
                     (item) => item.id === listing.token.id
                   );
+                  const legacyMetadata = metadataData?.tokens.find(
+                    (item) => item?.id === listing.token.id
+                  );
                   const metadata = legionsMetadata
                     ? {
                         id: legionsMetadata.id,
@@ -208,9 +211,22 @@ const Listings = ({
                           description: "Legions",
                         },
                       }
-                    : metadataData?.tokens.find(
-                        (item) => item?.id === listing.token.id
-                      ) ?? undefined;
+                    : legacyMetadata?.metadata
+                    ? {
+                        id: legacyMetadata.id,
+                        name: legacyMetadata.name,
+                        tokenId: listing.token.tokenId,
+                        metadata: {
+                          image: legacyMetadata.metadata.image,
+                          name: legacyMetadata.metadata.name,
+                          description:
+                            legacyMetadata.metadata.description.replace(
+                              "Legion",
+                              "Legacy Legion"
+                            ),
+                        },
+                      }
+                    : undefined;
 
                   return (
                     <tr
