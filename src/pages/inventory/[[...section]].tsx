@@ -11,13 +11,15 @@ import {
 import { Dialog, Transition, Listbox } from "@headlessui/react";
 import { XIcon } from "@heroicons/react/outline";
 import { SelectorIcon, CheckIcon } from "@heroicons/react/solid";
+import { ExclamationIcon } from "@heroicons/react/outline";
 import classNames from "clsx";
-import client from "../../lib/client";
+import { bridgeworld, client, marketplace } from "../../lib/client";
 import { useQuery } from "react-query";
 import { addMonths, addWeeks, closestIndexTo } from "date-fns";
 import { ethers } from "ethers";
 import {
   useApproveContract,
+  useChainId,
   useContractApprovals,
   useCreateListing,
   useRemoveListing,
@@ -28,6 +30,7 @@ import { AddressZero } from "@ethersproject/constants";
 import {
   formatNumber,
   generateIpfsLink,
+  getCollectionNameFromAddress,
   getCollectionSlugFromName,
 } from "../../utils";
 import { useRouter } from "next/router";
@@ -38,13 +41,22 @@ import { CenterLoadingDots } from "../../components/CenterLoadingDots";
 import { formatEther } from "ethers/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import { FEE, USER_SHARE } from "../../const";
-import { TokenStandard } from "../../../generated/graphql";
+import { TokenStandard } from "../../../generated/queries.graphql";
 
 type DrawerProps = {
   actions: Array<"create" | "remove" | "update">;
   needsContractApproval: boolean;
   nft: Nft;
   onClose: () => void;
+};
+
+type InventoryToken = {
+  token: {
+    collection: {
+      id: string;
+    };
+    id: string;
+  };
 };
 
 const dates = [
@@ -104,7 +116,7 @@ const Drawer = ({
   const { data: statData } = useQuery(
     ["stats", nft.address],
     () =>
-      client.getCollectionStats({
+      marketplace.getCollectionStats({
         id: nft.address,
       }),
     {
@@ -559,6 +571,7 @@ const Drawer = ({
 
 const Inventory = () => {
   const router = useRouter();
+  const chainId = useChainId();
   const [nft, setNft] = useState<Nft | null>(null);
   const { account } = useEthers();
   const [section] = router.query.section ?? [""];
@@ -566,22 +579,25 @@ const Inventory = () => {
   const inventory = useQuery(
     "inventory",
     () =>
-      client.getUserInventory({ id: account?.toLowerCase() ?? AddressZero }),
-    { enabled: !!account }
+      marketplace.getUserInventory({
+        id: account?.toLowerCase() ?? AddressZero,
+      }),
+    { enabled: !!account, refetchInterval: 30_000 }
   );
 
   const [data, totals, updates, emptyMessage] = useMemo(() => {
     const empty: Record<string, NonNullable<Nft["listing"]>> = {};
     const {
-      hidden = [],
+      inactive = [],
       listings = [],
       sold = [],
       tokens = [],
+      staked = [],
     } = inventory.data?.user ?? {};
     const totals = [...listings, ...tokens].reduce<Record<string, number>>(
       (acc, value) => {
         const { collection, tokenId } = value.token;
-        const key = `${collection.address}-${tokenId}`;
+        const key = `${collection.contract}-${tokenId}`;
 
         acc[key] ??= 0;
         acc[key] += Number(value.quantity);
@@ -593,10 +609,10 @@ const Inventory = () => {
     const updates = tokens.reduce<Record<string, NonNullable<Nft["listing"]>>>(
       (acc, value) => {
         const { collection, tokenId } = value.token;
-        const key = `${collection.address}-${tokenId}`;
+        const key = `${collection.contract}-${tokenId}`;
         const listing = listings.find(
           ({ token }) =>
-            token.collection.address === collection.address &&
+            token.collection.contract === collection.contract &&
             token.tokenId === tokenId
         );
 
@@ -610,31 +626,76 @@ const Inventory = () => {
       },
       {}
     );
+    // Filter out staked and listings from tokens until we have UI to handle it
+    const filtered = tokens.filter(
+      (token) =>
+        !(
+          listings.some((listing) => listing.token.id === token.token.id) ||
+          staked.some((stake) => stake.token.id === token.token.id) ||
+          inactive.some((listing) => listing.token.id === token.token.id)
+        )
+    );
 
     switch (section) {
-      case "staked":
-        return [hidden, totals, updates, "No staked listings 🙂"] as const;
+      case "inactive":
+        return [inactive, totals, updates, "No inactive listings 🙂"] as const;
       case "listed":
         return [listings, totals, empty, "No NFTs listed 🙂"] as const;
       case "sold":
         return [sold, totals, empty, null] as const;
       default:
-        return [tokens, totals, updates, null] as const;
+        return [filtered, totals, updates, null] as const;
     }
   }, [inventory.data?.user, section]);
 
+  const tokens = (data as InventoryToken[])
+    .filter(
+      ({ token }) =>
+        getCollectionNameFromAddress(token.collection.id, chainId) !== "Legions"
+    )
+    .map(({ token }) => token.id);
+
+  const legions = (data as InventoryToken[])
+    .filter(
+      ({ token }) =>
+        getCollectionNameFromAddress(token.collection.id, chainId) === "Legions"
+    )
+    .map(({ token }) => token.id);
+
+  const { data: metadataData } = useQuery(
+    ["inventory-metadata", tokens],
+    () => client.getTokensMetadata({ ids: tokens }),
+    {
+      enabled: tokens.length > 0,
+      refetchInterval: false,
+    }
+  );
+
+  const { data: legionMetadataData } = useQuery(
+    ["inventory-metadata-legions", legions],
+    () => bridgeworld.getLegionMetadata({ ids: legions }),
+    {
+      enabled: legions.length > 0,
+      refetchInterval: false,
+    }
+  );
+
   const tabs = useMemo(() => {
-    if (inventory.data?.user?.hidden.length) {
-      return [...defaultTabs, { name: "Staked", href: "/inventory/staked" }];
+    if (inventory.data?.user?.inactive.length) {
+      return [
+        ...defaultTabs,
+        { name: "Inactive", href: "/inventory/inactive" },
+      ];
     }
 
     return defaultTabs;
   }, [inventory.data?.user]);
 
   const collections = data.map(({ token: { collection } }) => collection);
+
   const approvals = useContractApprovals(
-    [...new Set(collections.map(({ address }) => address))]
-      .map((address) => collections.find((item) => address === item.address))
+    [...new Set(collections.map(({ contract }) => contract))]
+      .map((address) => collections.find((item) => address === item.contract))
       .filter(Boolean)
   );
 
@@ -680,6 +741,26 @@ const Inventory = () => {
                 </div>
               </div>
             </div>
+            {section === "inactive" && (
+              <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mt-4">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <ExclamationIcon
+                      className="h-5 w-5 text-yellow-400"
+                      aria-hidden="true"
+                    />
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-[0.7rem] text-left lg:text-xs text-yellow-700">
+                      Items that were listed while staked or transferred will
+                      appear here. They will reappear as listings when you
+                      unstake them so delist if you don&apos;t want to sell them
+                      at the original price you listed for.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
             <section className="mt-8 pb-16">
               {inventory.isLoading && <CenterLoadingDots className="h-36" />}
               {data.length === 0 && !inventory.isLoading && (
@@ -702,49 +783,73 @@ const Inventory = () => {
                       const slugOrAddress =
                         getCollectionSlugFromName(token.collection.name) ??
                         token.collection.id;
+                      const legionsMetadata = legionMetadataData?.tokens.find(
+                        (item) => item.id === token.id
+                      );
+                      const metadata = legionsMetadata
+                        ? {
+                            id: legionsMetadata.id,
+                            name: legionsMetadata.name,
+                            tokenId: token.tokenId,
+                            metadata: {
+                              image: legionsMetadata.image,
+                              name: legionsMetadata.name,
+                              description: "Legions",
+                            },
+                          }
+                        : metadataData?.tokens.find(
+                            (item) => item?.id === token.id
+                          ) ?? undefined;
 
                       return (
                         <li key={id}>
                           <div className="group block w-full aspect-w-1 aspect-h-1 rounded-sm overflow-hidden sm:aspect-w-3 sm:aspect-h-3 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-offset-gray-100 focus-within:ring-red-500">
-                            <ImageWrapper
-                              className={classNames(
-                                "object-fill object-center pointer-events-none",
-                                {
-                                  "group-hover:opacity-80": section !== "sold",
-                                }
-                              )}
-                              token={token}
-                            />
+                            {metadata ? (
+                              <ImageWrapper
+                                className={classNames(
+                                  "object-fill object-center pointer-events-none",
+                                  {
+                                    "group-hover:opacity-80":
+                                      section !== "sold",
+                                  }
+                                )}
+                                token={metadata}
+                              />
+                            ) : null}
                             {section !== "sold" ? (
                               <button
                                 type="button"
                                 className="absolute inset-0 focus:outline-none"
                                 onClick={() =>
                                   setNft({
-                                    address: token.collection.address,
+                                    address: token.collection.contract,
                                     collection: token.collection.name,
-                                    name: token.name ?? "",
+                                    name:
+                                      legionsMetadata?.name ?? token.name ?? "",
                                     listing: pricePerItem
                                       ? { expires, pricePerItem, quantity }
                                       : updates[
-                                          `${token.collection.address}-${token.tokenId}`
+                                          `${token.collection.contract}-${token.tokenId}`
                                         ],
-                                    source: token.metadata?.image.includes(
+                                    source: metadata?.metadata?.image.includes(
                                       "ipfs"
                                     )
-                                      ? generateIpfsLink(token.metadata.image)
-                                      : token.metadata?.image ?? "",
+                                      ? generateIpfsLink(
+                                          metadata?.metadata?.image
+                                        )
+                                      : metadata?.metadata?.image ?? "",
                                     standard: token.collection.standard,
                                     tokenId: token.tokenId,
                                     total:
                                       totals[
-                                        `${token.collection.address}-${token.tokenId}`
+                                        `${token.collection.contract}-${token.tokenId}`
                                       ],
                                   })
                                 }
                               >
                                 <span className="sr-only">
-                                  View details for {token.name}
+                                  View details for{" "}
+                                  {legionsMetadata?.name ?? token.name}
                                 </span>
                               </button>
                             ) : null}
@@ -755,7 +860,7 @@ const Inventory = () => {
                               passHref
                             >
                               <a className="text-gray-500 dark:text-gray-400 font-thin tracking-wide uppercase text-[0.5rem] hover:underline">
-                                {token.metadata?.description}
+                                {metadata?.metadata?.description}
                               </a>
                             </Link>
                             {pricePerItem && (
@@ -789,7 +894,7 @@ const Inventory = () => {
                               passHref
                             >
                               <a className="text-xs text-gray-800 dark:text-gray-50 font-semibold truncate hover:underline">
-                                {token.name}
+                                {metadata?.name}
                               </a>
                             </Link>
                             {expires && (

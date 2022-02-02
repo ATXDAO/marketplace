@@ -10,7 +10,7 @@ import {
 } from "@heroicons/react/solid";
 
 import { useInfiniteQuery, useQuery } from "react-query";
-import client from "../../../lib/client";
+import { bridgeworld, client, marketplace } from "../../../lib/client";
 import { AddressZero, Zero } from "@ethersproject/constants";
 import { CenterLoadingDots } from "../../../components/CenterLoadingDots";
 import {
@@ -18,19 +18,20 @@ import {
   formatNumber,
   formatPercent,
   formatPrice,
+  getCollectionNameFromAddress,
   slugToAddress,
 } from "../../../utils";
 import { formatEther } from "ethers/lib/utils";
 import ImageWrapper from "../../../components/ImageWrapper";
 import Link from "next/link";
 import { Modal } from "../../../components/Modal";
+import { GetCollectionAttributesQuery } from "../../../../generated/queries.graphql";
 import {
-  GetCollectionInfoQuery,
   GetCollectionListingsQuery,
   Listing_OrderBy,
   OrderDirection,
   TokenStandard,
-} from "../../../../generated/graphql";
+} from "../../../../generated/marketplace.graphql";
 import classNames from "clsx";
 import { useInView } from "react-intersection-observer";
 import { SearchAutocomplete } from "../../../components/SearchAutocomplete";
@@ -40,8 +41,34 @@ import Button from "../../../components/Button";
 import { useChainId } from "../../../lib/hooks";
 import { EthIcon, MagicIcon, SwapIcon } from "../../../components/Icons";
 import { useMagic } from "../../../context/magicContext";
+import { ChainId } from "@yuyao17/corefork";
 
 const MAX_ITEMS_PER_PAGE = 42;
+
+const generateDescription = (cotract: string, chainId: ChainId) => {
+  const collectionName = getCollectionNameFromAddress(cotract, chainId);
+
+  switch (collectionName) {
+    case "Legacy Legions Genesis":
+    case "Legacy Legions":
+      return (
+        <p className="text-gray-500 dark:text-gray-400 text-[0.5rem] sm:text-sm mt-4 sm:mt-6">
+          Legacy Legions need to undergo{" "}
+          <a
+            href="https://bridgeworld.treasure.lol/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline"
+          >
+            Pilgrimage
+          </a>{" "}
+          to participate in Bridgeworld.
+        </p>
+      );
+    default:
+      return "";
+  }
+};
 
 const tabs = [
   { name: "Collection", value: "collection" },
@@ -88,7 +115,7 @@ const MapSortToEnum = (sort: string) => {
 
 const getTotalQuantity = (
   listings: NonNullable<
-    NonNullable<GetCollectionListingsQuery["collection"]>["tokens"]
+    NonNullable<GetCollectionListingsQuery>["tokens"]
   >[number]["listings"]
 ) => {
   return listings && listings.length > 0
@@ -100,7 +127,9 @@ const getTotalQuantity = (
 };
 
 const reduceAttributes = (
-  attributes: NonNullable<GetCollectionInfoQuery["collection"]>["attributes"]
+  attributes: NonNullable<
+    GetCollectionAttributesQuery["collection"]
+  >["attributes"]
 ): {
   [key: string]: { value: string; percentage: string }[];
 } | null => {
@@ -262,7 +291,7 @@ const Collection = () => {
   const { data: activityData, isLoading: isActivityLoading } = useQuery(
     ["activity", { formattedAddress, activitySortParam }],
     () =>
-      client.getActivity({
+      marketplace.getActivity({
         id: formattedAddress,
         orderBy:
           activitySortParam === "price"
@@ -275,9 +304,21 @@ const Collection = () => {
   );
 
   const { data: collectionData } = useQuery(
-    ["collection", formattedAddress],
+    ["collection-info", formattedAddress],
     () =>
-      client.getCollectionInfo({
+      marketplace.getCollectionInfo({
+        id: formattedAddress,
+      }),
+    {
+      enabled: !!formattedAddress,
+      refetchInterval: false,
+    }
+  );
+
+  const { data: collectionAttributesData } = useQuery(
+    ["collection-attributes", formattedAddress],
+    () =>
+      client.getCollectionAttributes({
         id: formattedAddress,
       }),
     {
@@ -287,13 +328,13 @@ const Collection = () => {
   );
 
   const attributeFilterList = reduceAttributes(
-    collectionData?.collection?.attributes
+    collectionAttributesData?.collection?.attributes
   );
 
   const { data: statData } = useQuery(
     ["stats", formattedAddress],
     () =>
-      client.getCollectionStats({
+      marketplace.getCollectionStats({
         id: formattedAddress,
       }),
     {
@@ -313,28 +354,71 @@ const Collection = () => {
   const isERC1155 =
     collectionData?.collection?.standard === TokenStandard.ERC1155;
 
+  const searchFilters = React.useMemo(
+    () => formatSearchFilter(formattedSearch),
+    [formattedSearch]
+  );
+
+  const { data: filteredData, isLoading: isFilterDataLoading } = useQuery(
+    ["filtered-tokens", filters, searchFilters],
+    () =>
+      client.getFilteredTokens({
+        filters: formatSearchFilter(formattedSearch),
+      }),
+    {
+      enabled: searchFilters.length > 0,
+      refetchInterval: false,
+    }
+  );
+
+  const { data: searchedData, isLoading: isSearchedDataLoading } = useQuery(
+    ["searched-tokens", searchParams],
+    () =>
+      marketplace.getTokensByName({
+        collection: formattedAddress,
+        name: searchParams,
+      }),
+    {
+      enabled: !!formattedAddress && Boolean(searchParams),
+      refetchInterval: false,
+    }
+  );
+
+  const filteredTokenIds = React.useMemo(
+    () => [
+      ...(filteredData?.tokens?.map((token) => token.id) ?? []),
+      ...(searchedData?.tokens?.map((token) => token.id) ?? []),
+    ],
+    [filteredData, searchedData]
+  );
+
   const {
     data: listingData,
     isLoading: isListingLoading,
     fetchNextPage,
   } = useInfiniteQuery(
-    ["listings", { formattedAddress, sortParam, searchParams, search }],
+    [
+      "listings",
+      { formattedAddress, sortParam, searchParams, search, filteredTokenIds },
+    ],
     ({ queryKey, pageParam = 0 }) =>
-      client.getCollectionListings({
+      marketplace.getCollectionListings({
         id: formattedAddress,
         isERC1155,
+        isERC721: !isERC1155 && filteredTokenIds.length === 0,
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         tokenName: queryKey[1].searchParams,
         skipBy: pageParam,
         first: MAX_ITEMS_PER_PAGE,
-        filter: formatSearchFilter(formattedSearch),
         orderBy: sort
           ? MapSortToOrder(Array.isArray(sort) ? sort[0] : sort)
           : Listing_OrderBy.pricePerItem,
         orderDirection: sort
           ? MapSortToEnum(Array.isArray(sort) ? sort[0] : sort)
           : OrderDirection.asc,
+        filteredTokenIds,
+        withFilters: !isERC1155 && filteredTokenIds.length > 0,
       }),
     {
       enabled: !!formattedAddress && !!collectionData,
@@ -342,14 +426,54 @@ const Collection = () => {
     }
   );
 
+  const { data: metadataData, isLoading: isMetadataLoading } = useQuery(
+    ["metadata", formattedAddress, listingData, filteredTokenIds],
+    () =>
+      client.getCollectionMetadata({
+        id: formattedAddress,
+        isERC1155,
+        tokenId_in: listingData?.pages.reduce((acc, page) => {
+          const tokenIds =
+            (page.listings ?? page.filtered)?.map(
+              (list) => list.token.tokenId
+            ) || [];
+          return [...acc, ...tokenIds];
+        }, []),
+      }),
+    {
+      enabled: !!formattedAddress && !!listingData,
+      refetchInterval: false,
+    }
+  );
+
+  const { data: legionMetadataData } = useQuery(
+    ["metadata-legions", listingData?.pages.length],
+    () =>
+      bridgeworld.getLegionMetadata({
+        ids:
+          listingData?.pages.reduce((acc, page) => {
+            const ids =
+              (page.listings ?? page.filtered)?.map((list) => list.token.id) ||
+              [];
+            return [...acc, ...ids];
+          }, []) || [],
+      }),
+    {
+      enabled:
+        !!formattedAddress &&
+        !!listingData &&
+        getCollectionNameFromAddress(formattedAddress, chainId) === "Legions",
+    }
+  );
+
   // reset searchParams on address change
   useEffect(() => {
     setSearchParams("");
+    setSearchToken("");
   }, [formattedAddress]);
 
-  const collection =
-    listingData?.pages[listingData.pages.length - 1]?.collection;
-  const data = isERC1155 ? collection?.tokens : collection?.listings;
+  const page = listingData?.pages[listingData.pages.length - 1];
+  const data = isERC1155 ? page?.tokens : page?.listings ?? page?.filtered;
 
   const hasNextPage = data?.length === MAX_ITEMS_PER_PAGE;
 
@@ -554,9 +678,10 @@ const Collection = () => {
         <div className="py-24 flex flex-col items-center">
           {collectionData?.collection && statData?.collection ? (
             <>
-              <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-gray-900 dark:text-gray-100">
-                {collectionData.collection.name}
+              <h1 className="text-xl md:text-5xl sm:text-3xl font-extrabold tracking-tight text-gray-900 dark:text-gray-100">
+                {statData.collection.name}
               </h1>
+              {generateDescription(formattedAddress, chainId)}
               <div className="mt-12 overflow-hidden flex flex-col">
                 <dl className="sm:-mx-8 -mt-8 flex divide-x-2">
                   <div className="flex flex-col px-6 sm:px-8 pt-8">
@@ -898,7 +1023,9 @@ const Collection = () => {
                   </div>
                 )}
               </section>
-              {isListingLoading && <CenterLoadingDots className="h-60" />}
+              {isListingLoading || isFilterDataLoading ? (
+                <CenterLoadingDots className="h-60" />
+              ) : null}
               {data?.length === 0 && !isListingLoading && (
                 <div className="flex flex-col justify-center items-center h-36">
                   <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-gray-200">
@@ -906,7 +1033,11 @@ const Collection = () => {
                   </h3>
                 </div>
               )}
-              {listingData && collectionData && (
+              {listingData &&
+              collectionData &&
+              !isListingLoading &&
+              !isFilterDataLoading &&
+              !isSearchedDataLoading ? (
                 <section aria-labelledby="products-heading" className="my-8">
                   <h2 id="products-heading" className="sr-only">
                     {collectionData.collection?.name}
@@ -918,30 +1049,38 @@ const Collection = () => {
                     {listingData.pages.map((group, i) => (
                       <React.Fragment key={i}>
                         {/* ERC1155 */}
-                        {group.collection?.tokens
+                        {group.tokens
                           ?.filter((token) => Boolean(token?.listings?.length))
                           .map((token) => {
+                            const metadata = metadataData?.erc1155.find(
+                              (metadata) => metadata.tokenId === token.tokenId
+                            );
+
                             return (
                               <li key={token.id} className="group">
                                 <div className="block w-full aspect-w-1 aspect-h-1 rounded-sm overflow-hidden sm:aspect-w-3 sm:aspect-h-3 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-offset-gray-100 focus-within:ring-red-500">
-                                  <ImageWrapper
-                                    className="w-full h-full object-center object-fill group-hover:opacity-75"
-                                    token={token}
-                                  />
+                                  {metadata?.metadata ? (
+                                    <ImageWrapper
+                                      className="w-full h-full object-center object-fill group-hover:opacity-75"
+                                      token={metadata}
+                                    />
+                                  ) : (
+                                    <div className="animate-pulse w-full bg-gray-300 h-64 rounded-md m-auto" />
+                                  )}
                                   <Link
                                     href={`/collection/${slugOrAddress}/${token.tokenId}`}
                                     passHref
                                   >
                                     <a className="absolute inset-0 focus:outline-none">
                                       <span className="sr-only">
-                                        View details for {token.name}
+                                        View details for {metadata?.name}
                                       </span>
                                     </a>
                                   </Link>
                                 </div>
                                 <div className="mt-4 text-base font-medium text-gray-900 space-y-2">
                                   <p className="text-xs text-gray-800 dark:text-gray-50 font-semibold truncate">
-                                    {token.name}
+                                    {metadata?.name}
                                   </p>
                                   <p className="dark:text-gray-100 text-sm xl:text-base capsize">
                                     {formatNumber(
@@ -968,42 +1107,70 @@ const Collection = () => {
                             );
                           })}
                         {/* ERC721 */}
-                        {group.collection?.listings?.map((listing) => {
-                          return (
-                            <li key={listing.id} className="group">
-                              <div className="block w-full aspect-w-1 aspect-h-1 rounded-sm overflow-hidden focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-offset-gray-100 focus-within:ring-red-500">
-                                <ImageWrapper
-                                  className="w-full h-full object-center object-fill group-hover:opacity-75"
-                                  token={listing.token}
-                                />
-                                <Link
-                                  href={`/collection/${slugOrAddress}/${listing.token.tokenId}`}
-                                >
-                                  <a className="absolute inset-0 focus:outline-none">
-                                    <span className="sr-only">
-                                      View details for {listing.token.name}
+                        {(group?.listings ?? group?.filtered)?.map(
+                          (listing) => {
+                            const legionsMetadata =
+                              legionMetadataData?.tokens.find(
+                                (item) => item.id === listing.token.id
+                              );
+                            const metadata =
+                              metadataData?.erc721?.find(
+                                (item) =>
+                                  item?.tokenId === listing.token.tokenId
+                              ) ??
+                              (legionsMetadata
+                                ? {
+                                    id: legionsMetadata.id,
+                                    name: legionsMetadata.name,
+                                    tokenId: listing.token.tokenId,
+                                    metadata: {
+                                      image: legionsMetadata.image,
+                                      name: legionsMetadata.name,
+                                      description: "Legions",
+                                    },
+                                  }
+                                : undefined);
+
+                            return (
+                              <li key={listing.id} className="group">
+                                <div className="block w-full aspect-w-1 aspect-h-1 rounded-sm overflow-hidden focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-offset-gray-100 focus-within:ring-red-500">
+                                  {metadata ? (
+                                    <ImageWrapper
+                                      className="w-full h-full object-center object-fill group-hover:opacity-75"
+                                      token={metadata}
+                                    />
+                                  ) : (
+                                    <div className="animate-pulse w-full bg-gray-300 h-64 rounded-md m-auto" />
+                                  )}
+                                  <Link
+                                    href={`/collection/${slugOrAddress}/${listing.token.tokenId}`}
+                                  >
+                                    <a className="absolute inset-0 focus:outline-none">
+                                      <span className="sr-only">
+                                        View details for {metadata?.name}
+                                      </span>
+                                    </a>
+                                  </Link>
+                                </div>
+                                <div className="mt-4 font-medium text-gray-900 space-y-2">
+                                  <p className="text-xs text-gray-500 dark:text-gray-300 truncate font-semibold">
+                                    {metadata?.name}
+                                  </p>
+                                  <p className="dark:text-gray-100 text-sm xl:text-base capsize">
+                                    {formatNumber(
+                                      parseFloat(
+                                        formatEther(listing.pricePerItem)
+                                      )
+                                    )}{" "}
+                                    <span className="text-[0.5rem] xl:text-xs font-light">
+                                      $MAGIC
                                     </span>
-                                  </a>
-                                </Link>
-                              </div>
-                              <div className="mt-4 font-medium text-gray-900 space-y-2">
-                                <p className="text-xs text-gray-500 dark:text-gray-300 truncate font-semibold">
-                                  {listing.token.name}
-                                </p>
-                                <p className="dark:text-gray-100 text-sm xl:text-base capsize">
-                                  {formatNumber(
-                                    parseFloat(
-                                      formatEther(listing.pricePerItem)
-                                    )
-                                  )}{" "}
-                                  <span className="text-[0.5rem] xl:text-xs font-light">
-                                    $MAGIC
-                                  </span>
-                                </p>
-                              </div>
-                            </li>
-                          );
-                        })}
+                                  </p>
+                                </div>
+                              </li>
+                            );
+                          }
+                        )}
                       </React.Fragment>
                     ))}
                   </ul>
@@ -1021,15 +1188,15 @@ const Collection = () => {
                     </ul>
                   )}
                 </section>
-              )}
+              ) : null}
             </div>
           </div>
         ) : (
           <>
             {isActivityLoading && <CenterLoadingDots className="h-60" />}
-            {activityData?.collection?.listings && (
+            {activityData?.listings && (
               <Listings
-                listings={activityData.collection.listings}
+                listings={activityData.listings}
                 sort={activitySortParam}
               />
             )}
