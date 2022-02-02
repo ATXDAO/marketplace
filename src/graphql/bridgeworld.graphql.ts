@@ -2,7 +2,7 @@ import gql from "graphql-tag";
 
 export const getLegionMetadata = gql`
   query getLegionMetadata($ids: [ID!]!) {
-    tokens(where: { id_in: $ids }) {
+    tokens(first: 1000, where: { id_in: $ids }) {
       id
       image
       name
