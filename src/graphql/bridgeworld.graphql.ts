@@ -24,3 +24,14 @@ export const getLegionMetadata = gql`
     }
   }
 `;
+
+export const getTokensByName = gql`
+  query getTokensByName($name: String!, $collection: Bytes!) {
+    tokens(
+      first: 1000
+      where: { name_contains: $name, contract: $collection }
+    ) {
+      id
+    }
+  }
+`;

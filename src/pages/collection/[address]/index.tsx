@@ -363,7 +363,8 @@ const Collection = () => {
     ["filtered-tokens", filters, searchFilters],
     () =>
       client.getFilteredTokens({
-        filters: formatSearchFilter(formattedSearch),
+        collection: formattedAddress,
+        filters: searchFilters,
       }),
     {
       enabled: searchFilters.length > 0,
@@ -371,23 +372,57 @@ const Collection = () => {
     }
   );
 
-  const { data: searchedData, isLoading: isSearchedDataLoading } = useQuery(
-    ["searched-tokens", searchParams],
+  const {
+    data: searchedMarketplaceData,
+    isLoading: isMarketplaceSearchedDataLoading,
+  } = useQuery(
+    ["marketplace-searched-tokens", searchParams],
     () =>
       marketplace.getTokensByName({
         collection: formattedAddress,
         name: searchParams,
       }),
     {
-      enabled: !!formattedAddress && Boolean(searchParams),
+      enabled:
+        !!formattedAddress &&
+        Boolean(searchParams) &&
+        getCollectionNameFromAddress(formattedAddress, chainId) !== "Legions",
       refetchInterval: false,
     }
+  );
+
+  const { data: searchedLegionsData, isLoading: isLegionsSearchedDataLoading } =
+    useQuery(
+      ["legions-searched-tokens", searchParams],
+      () =>
+        bridgeworld.getTokensByName({
+          collection: formattedAddress,
+          name: searchParams,
+        }),
+      {
+        enabled:
+          !!formattedAddress &&
+          Boolean(searchParams) &&
+          getCollectionNameFromAddress(formattedAddress, chainId) === "Legions",
+        refetchInterval: false,
+      }
+    );
+
+  const isSearchedDataLoading =
+    isMarketplaceSearchedDataLoading || isLegionsSearchedDataLoading;
+
+  const searchedData = React.useMemo(
+    () => [
+      ...(searchedLegionsData?.tokens?.map((token) => token.id) ?? []),
+      ...(searchedMarketplaceData?.tokens?.map((token) => token.id) ?? []),
+    ],
+    [searchedLegionsData, searchedMarketplaceData]
   );
 
   const filteredTokenIds = React.useMemo(
     () => [
       ...(filteredData?.tokens?.map((token) => token.id) ?? []),
-      ...(searchedData?.tokens?.map((token) => token.id) ?? []),
+      ...searchedData,
     ],
     [filteredData, searchedData]
   );
@@ -441,8 +476,10 @@ const Collection = () => {
         }, []),
       }),
     {
-      enabled: !!formattedAddress && !!listingData,
-      refetchInterval: false,
+      enabled:
+        !!formattedAddress &&
+        !!listingData &&
+        getCollectionNameFromAddress(formattedAddress, chainId) !== "Legions",
     }
   );
 
