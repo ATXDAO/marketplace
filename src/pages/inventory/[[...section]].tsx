@@ -586,7 +586,10 @@ const Inventory = () => {
   );
 
   const [data, totals, updates, emptyMessage] = useMemo(() => {
-    const empty: Record<string, NonNullable<Nft["listing"]>> = {};
+    const empty: Record<
+      string,
+      NonNullable<Nft["listing"] & { status: "None" }>
+    > = {};
     const {
       inactive = [],
       listings = [],
@@ -594,46 +597,54 @@ const Inventory = () => {
       tokens = [],
       staked = [],
     } = inventory.data?.user ?? {};
-    const totals = [...listings, ...tokens].reduce<Record<string, number>>(
-      (acc, value) => {
-        const { collection, tokenId } = value.token;
-        const key = `${collection.contract}-${tokenId}`;
+    const totals = tokens.reduce<Record<string, number>>((acc, value) => {
+      const { collection, tokenId } = value.token;
+      const key = `${collection.contract}-${tokenId}`;
 
-        acc[key] ??= 0;
-        acc[key] += Number(value.quantity);
+      acc[key] ??= 0;
+      acc[key] += Number(value.quantity);
 
-        return acc;
-      },
-      {}
-    );
-    const updates = tokens.reduce<Record<string, NonNullable<Nft["listing"]>>>(
-      (acc, value) => {
-        const { collection, tokenId } = value.token;
-        const key = `${collection.contract}-${tokenId}`;
-        const listing = listings.find(
-          ({ token }) =>
-            token.collection.contract === collection.contract &&
-            token.tokenId === tokenId
-        );
+      return acc;
+    }, {});
+    const updates = tokens.reduce<
+      Record<
+        string,
+        NonNullable<Nft["listing"] & { status: "Active" | "Inactive" }>
+      >
+    >((acc, value) => {
+      const { collection, tokenId } = value.token;
+      const key = `${collection.contract}-${tokenId}`;
+      const listing = listings.find(
+        ({ token }) =>
+          token.collection.contract === collection.contract &&
+          token.tokenId === tokenId
+      );
+      const inactiveListing = inactive.find(
+        ({ token }) =>
+          token.collection.contract === collection.contract &&
+          token.tokenId === tokenId
+      );
 
-        if (listing) {
-          const { expires, pricePerItem, quantity } = listing;
+      if (listing || inactiveListing) {
+        const {
+          expires,
+          pricePerItem,
+          quantity = 1,
+        } = listing ?? inactiveListing ?? {};
 
-          acc[key] = { expires, pricePerItem, quantity };
-        }
+        acc[key] = {
+          expires,
+          pricePerItem,
+          quantity,
+          status: inactiveListing ? "Inactive" : "Active",
+        };
+      }
 
-        return acc;
-      },
-      {}
-    );
-    // Filter out staked and listings from tokens until we have UI to handle it
+      return acc;
+    }, {});
+    // Filter out staked tokens until we have UI to handle it
     const filtered = tokens.filter(
-      (token) =>
-        !(
-          listings.some((listing) => listing.token.id === token.token.id) ||
-          staked.some((stake) => stake.token.id === token.token.id) ||
-          inactive.some((listing) => listing.token.id === token.token.id)
-        )
+      (token) => !staked.some((stake) => stake.token.id === token.token.id)
     );
 
     switch (section) {
@@ -778,126 +789,135 @@ const Inventory = () => {
                   role="list"
                   className="grid grid-cols-1 gap-y-10 sm:grid-cols-2 gap-x-6 lg:grid-cols-4 xl:gap-x-8"
                 >
-                  {data.map(
-                    ({ id, expires, pricePerItem, quantity, token }) => {
-                      const slugOrAddress =
-                        getCollectionSlugFromName(token.collection.name) ??
-                        token.collection.id;
-                      const legionsMetadata = legionMetadataData?.tokens.find(
-                        (item) => item.id === token.id
-                      );
-                      const metadata = legionsMetadata
-                        ? {
-                            id: legionsMetadata.id,
+                  {data.map(({ id, quantity, token, ...item }) => {
+                    const slugOrAddress =
+                      getCollectionSlugFromName(token.collection.name) ??
+                      token.collection.id;
+                    const legionsMetadata = legionMetadataData?.tokens.find(
+                      (item) => item.id === token.id
+                    );
+                    const metadata = legionsMetadata
+                      ? {
+                          id: legionsMetadata.id,
+                          name: legionsMetadata.name,
+                          tokenId: token.tokenId,
+                          metadata: {
+                            image: legionsMetadata.image,
                             name: legionsMetadata.name,
-                            tokenId: token.tokenId,
-                            metadata: {
-                              image: legionsMetadata.image,
-                              name: legionsMetadata.name,
-                              description: "Legions",
-                            },
-                          }
-                        : metadataData?.tokens.find(
-                            (item) => item?.id === token.id
-                          ) ?? undefined;
+                            description: "Legions",
+                          },
+                        }
+                      : metadataData?.tokens.find(
+                          (item) => item?.id === token.id
+                        ) ?? undefined;
+                    const { expires, pricePerItem } = {
+                      ...item,
+                      ...updates[
+                        `${token.collection.contract}-${token.tokenId}`
+                      ],
+                    };
+                    const { quantity: listedQuantity, status = " None" } =
+                      updates[
+                        `${token.collection.contract}-${token.tokenId}`
+                      ] ?? {};
 
-                      return (
-                        <li key={id}>
-                          <div className="group block w-full aspect-w-1 aspect-h-1 rounded-sm overflow-hidden sm:aspect-w-3 sm:aspect-h-3 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-offset-gray-100 focus-within:ring-red-500">
-                            {metadata ? (
-                              <ImageWrapper
-                                className={classNames(
-                                  "object-fill object-center pointer-events-none",
-                                  {
-                                    "group-hover:opacity-80":
-                                      section !== "sold",
-                                  }
-                                )}
-                                token={metadata}
-                              />
-                            ) : null}
-                            {section !== "sold" ? (
-                              <button
-                                type="button"
-                                className="absolute inset-0 focus:outline-none"
-                                onClick={() =>
-                                  setNft({
-                                    address: token.collection.contract,
-                                    collection: token.collection.name,
-                                    name:
-                                      legionsMetadata?.name ?? token.name ?? "",
-                                    listing: pricePerItem
-                                      ? { expires, pricePerItem, quantity }
-                                      : updates[
-                                          `${token.collection.contract}-${token.tokenId}`
-                                        ],
-                                    source: metadata?.metadata?.image.includes(
-                                      "ipfs"
-                                    )
-                                      ? generateIpfsLink(
-                                          metadata?.metadata?.image
-                                        )
-                                      : metadata?.metadata?.image ?? "",
-                                    standard: token.collection.standard,
-                                    tokenId: token.tokenId,
-                                    total:
-                                      totals[
-                                        `${token.collection.contract}-${token.tokenId}`
-                                      ],
-                                  })
+                    return (
+                      <li key={id}>
+                        <div className="group block w-full aspect-w-1 aspect-h-1 rounded-sm overflow-hidden sm:aspect-w-3 sm:aspect-h-3 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-offset-gray-100 focus-within:ring-red-500">
+                          {metadata ? (
+                            <ImageWrapper
+                              className={classNames(
+                                "object-fill object-center pointer-events-none",
+                                {
+                                  "group-hover:opacity-80": section !== "sold",
                                 }
-                              >
-                                <span className="sr-only">
-                                  View details for{" "}
-                                  {legionsMetadata?.name ?? token.name}
-                                </span>
-                              </button>
-                            ) : null}
-                          </div>
-                          <div className="mt-4 flex items-center justify-between text-base font-medium text-gray-900">
-                            <Link
-                              href={`/collection/${slugOrAddress}`}
-                              passHref
-                            >
-                              <a className="text-gray-500 dark:text-gray-400 font-thin tracking-wide uppercase text-[0.5rem] hover:underline">
-                                {metadata?.metadata?.description}
-                              </a>
-                            </Link>
-                            {pricePerItem && (
-                              <p className="dark:text-gray-100">
-                                {formatNumber(
-                                  parseFloat(formatEther(pricePerItem))
-                                )}{" "}
-                                <span className="text-xs font-light">
-                                  $MAGIC
-                                </span>
-                              </p>
-                            )}
-                            {!expires &&
-                              !pricePerItem &&
-                              quantity &&
-                              token.collection.standard ===
-                                TokenStandard.ERC1155 && (
-                                <span className="text-gray-600 text-xs text-[0.6rem]">
-                                  <span className="text-gray-500 dark:text-gray-400">
-                                    Quantity:
-                                  </span>{" "}
-                                  <span className="font-bold text-gray-700 dark:text-gray-300">
-                                    {quantity}
-                                  </span>
-                                </span>
                               )}
-                          </div>
-                          <div className="flex items-baseline justify-between mt-1">
-                            <Link
-                              href={`/collection/${slugOrAddress}/${token.tokenId}`}
-                              passHref
+                              token={metadata}
+                            />
+                          ) : null}
+                          {section !== "sold" ? (
+                            <button
+                              type="button"
+                              className="absolute inset-0 focus:outline-none"
+                              onClick={() =>
+                                setNft({
+                                  address: token.collection.contract,
+                                  collection: token.collection.name,
+                                  name:
+                                    legionsMetadata?.name ?? token.name ?? "",
+                                  listing:
+                                    updates[
+                                      `${token.collection.contract}-${token.tokenId}`
+                                    ] ?? pricePerItem
+                                      ? { expires, pricePerItem, quantity }
+                                      : undefined,
+                                  source: metadata?.metadata?.image.includes(
+                                    "ipfs"
+                                  )
+                                    ? generateIpfsLink(
+                                        metadata?.metadata?.image
+                                      )
+                                    : metadata?.metadata?.image ?? "",
+                                  standard: token.collection.standard,
+                                  tokenId: token.tokenId,
+                                  total:
+                                    totals[
+                                      `${token.collection.contract}-${token.tokenId}`
+                                    ],
+                                })
+                              }
                             >
-                              <a className="text-xs text-gray-800 dark:text-gray-50 font-semibold truncate hover:underline">
-                                {metadata?.name}
-                              </a>
-                            </Link>
-                            {expires && (
+                              <span className="sr-only">
+                                View details for{" "}
+                                {legionsMetadata?.name ?? token.name}
+                              </span>
+                            </button>
+                          ) : null}
+                        </div>
+                        <div className="mt-4 flex items-center justify-between text-base font-medium text-gray-900">
+                          <Link href={`/collection/${slugOrAddress}`} passHref>
+                            <a className="text-gray-500 dark:text-gray-400 font-thin tracking-wide uppercase text-[0.5rem] hover:underline">
+                              {metadata?.metadata?.description}
+                            </a>
+                          </Link>
+                          {pricePerItem && (
+                            <p className="dark:text-gray-100">
+                              {formatNumber(
+                                parseFloat(formatEther(pricePerItem))
+                              )}{" "}
+                              <span className="text-xs font-light">$MAGIC</span>
+                            </p>
+                          )}
+                          {!expires &&
+                            !pricePerItem &&
+                            quantity &&
+                            token.collection.standard ===
+                              TokenStandard.ERC1155 && (
+                              <span className="text-gray-600 text-xs text-[0.6rem]">
+                                <span className="text-gray-500 dark:text-gray-400">
+                                  Quantity:
+                                </span>{" "}
+                                <span className="font-bold text-gray-700 dark:text-gray-300">
+                                  {quantity}
+                                </span>
+                              </span>
+                            )}
+                        </div>
+                        <div className="flex items-baseline justify-between mt-1">
+                          <Link
+                            href={`/collection/${slugOrAddress}/${token.tokenId}`}
+                            passHref
+                          >
+                            <a className="text-xs text-gray-800 dark:text-gray-50 font-semibold truncate hover:underline">
+                              {metadata?.name}
+                            </a>
+                          </Link>
+                          {expires ? (
+                            status === "Inactive" ? (
+                              <p className="text-xs text-red-500 text-[0.6rem] ml-auto whitespace-nowrap">
+                                Inactive
+                              </p>
+                            ) : (
                               <p className="text-xs text-[0.6rem] ml-auto whitespace-nowrap">
                                 <span className="text-gray-500 dark:text-gray-400">
                                   Expires in:
@@ -908,41 +928,58 @@ const Inventory = () => {
                                   )}
                                 </span>
                               </p>
-                            )}
-                            {!expires &&
-                              pricePerItem &&
-                              quantity &&
-                              token.collection.standard ===
-                                TokenStandard.ERC1155 && (
-                                <span className="text-gray-600 text-xs text-[0.6rem]">
-                                  <span className="text-gray-500 dark:text-gray-400">
-                                    Quantity:
-                                  </span>{" "}
-                                  <span className="font-bold text-gray-700 dark:text-gray-300">
-                                    {quantity}
-                                  </span>
-                                </span>
-                              )}
-                          </div>
-                          {expires &&
+                            )
+                          ) : null}
+                          {!expires &&
+                            pricePerItem &&
                             quantity &&
                             token.collection.standard ===
                               TokenStandard.ERC1155 && (
-                              <div className="flex mt-1 justify-end">
+                              <span className="text-gray-600 text-xs text-[0.6rem]">
+                                <span className="text-gray-500 dark:text-gray-400">
+                                  Quantity:
+                                </span>{" "}
+                                <span className="font-bold text-gray-700 dark:text-gray-300">
+                                  {quantity}
+                                </span>
+                              </span>
+                            )}
+                        </div>
+                        {expires &&
+                          quantity &&
+                          token.collection.standard ===
+                            TokenStandard.ERC1155 && (
+                            <div
+                              className={classNames(
+                                "flex mt-1",
+                                listedQuantity
+                                  ? "justify-between"
+                                  : "justify-end"
+                              )}
+                            >
+                              <span className="text-gray-600 text-xs text-[0.6rem]">
+                                <span className="text-gray-500 dark:text-gray-400">
+                                  Quantity:
+                                </span>{" "}
+                                <span className="font-bold text-gray-700 dark:text-gray-300">
+                                  {quantity}
+                                </span>
+                              </span>
+                              {listedQuantity && (
                                 <span className="text-gray-600 text-xs text-[0.6rem]">
                                   <span className="text-gray-500 dark:text-gray-400">
-                                    Quantity:
+                                    Listed:
                                   </span>{" "}
                                   <span className="font-bold text-gray-700 dark:text-gray-300">
-                                    {quantity}
+                                    {listedQuantity}
                                   </span>
                                 </span>
-                              </div>
-                            )}
-                        </li>
-                      );
-                    }
-                  )}
+                              )}
+                            </div>
+                          )}
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
             </section>
@@ -951,13 +988,7 @@ const Inventory = () => {
 
         {nft ? (
           <Drawer
-            actions={
-              router.query.section?.[0]
-                ? ["update", "remove"]
-                : nft.listing
-                ? ["update"]
-                : ["create"]
-            }
+            actions={nft.listing ? ["update", "remove"] : ["create"]}
             needsContractApproval={!Boolean(approvals[nft.address])}
             nft={nft}
             onClose={onClose}
