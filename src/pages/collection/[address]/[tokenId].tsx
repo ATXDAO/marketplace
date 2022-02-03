@@ -514,9 +514,13 @@ export default function Example() {
                   </Tooltip>
                 )}
 
-                <h2 className="text-red-500 dark:text-gray-500 tracking-wide uppercase">
-                  {data.collection.name}
-                </h2>
+                <Link href={`/collection/${slugOrAddress}`}>
+                  <a>
+                    <h2 className="text-red-500 dark:text-gray-500 tracking-wide uppercase">
+                      {data.collection.name}
+                    </h2>
+                  </a>
+                </Link>
                 <div className="mt-3">
                   <h2 className="text-2xl font-extrabold text-gray-900 dark:text-gray-200">
                     {metadata?.name ?? ""}
