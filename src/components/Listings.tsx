@@ -318,6 +318,15 @@ const Listings = ({
                     (item) => item?.id === listing.token.id
                   ) ?? undefined;
 
+              const collectionName = getCollectionNameFromAddress(
+                listing?.collection?.id,
+                chainId
+              );
+
+              const slugOrAddress =
+                getCollectionSlugFromName(collectionName) ??
+                listing.collection.id;
+
               return (
                 <Disclosure as="li" key={listing.id}>
                   {({ open }) => (
@@ -374,6 +383,14 @@ const Listings = ({
                           className="block px-4 dark:bg-gray-200 text-gray-700"
                         >
                           <div className="pb-4 flex sm:space-y-0 space-y-2 sm:flex-row flex-col sm:divide-x-[1px] divide-gray-400 text-sm">
+                            <Link
+                              href={`/collection/${slugOrAddress}/${listing.token.tokenId}`}
+                              passHref
+                            >
+                              <a className="text-red-500 hover:text-red-700 dark:text-gray-200 dark:hover:text-gray-300 text-sm flex items-center space-x-1">
+                                View item
+                              </a>
+                            </Link>
                             <div className="space-y-1 sm:pr-8">
                               <p className="text-xs dark:text-gray-500">
                                 From:
