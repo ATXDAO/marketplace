@@ -232,7 +232,9 @@ export default function Example() {
     ["details-metadata", id],
     () => client.getTokenMetadata({ id }),
     {
-      enabled: Boolean(id),
+      enabled:
+        Boolean(id) &&
+        getCollectionNameFromAddress(formattedAddress, chainId) !== "Legions",
       refetchInterval: false,
     }
   );
@@ -242,7 +244,7 @@ export default function Example() {
     () => bridgeworld.getLegionMetadata({ ids: [id] }),
     {
       enabled:
-        Boolean(id) ||
+        Boolean(id) &&
         getCollectionNameFromAddress(formattedAddress, chainId) === "Legions",
       refetchInterval: false,
     }
@@ -328,7 +330,15 @@ export default function Example() {
         image: legionMetadata.image,
         name: legionMetadata.name,
       }
-    : legacyMetadata?.metadata ?? null;
+    : legacyMetadata?.metadata
+    ? {
+        ...legacyMetadata.metadata,
+        description: legacyMetadata.metadata.description.replace(
+          "Legion",
+          "Legacy Legion"
+        ),
+      }
+    : null;
 
   const loading = isLoading || isIdle;
 
