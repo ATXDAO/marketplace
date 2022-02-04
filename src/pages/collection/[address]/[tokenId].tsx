@@ -520,7 +520,7 @@ export default function Example() {
 
                 <Link href={`/collection/${slugOrAddress}`}>
                   <a>
-                    <h2 className="text-red-500 dark:text-gray-500 tracking-wide uppercase">
+                    <h2 className="inline-block text-red-500 dark:text-gray-500 tracking-wide uppercase">
                       {data.collection.name}
                     </h2>
                   </a>
