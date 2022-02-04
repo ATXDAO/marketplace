@@ -11,6 +11,11 @@ const collectionWebhooks = {
     listWebhook: process.env.SMOLBODIES_LIST_WEBHOOK,
     soldWebhook: process.env.SMOLBODIES_SOLD_WEBHOOK,
   },
+  // Smol Bodies Pets
+  "0xae0d0c4cc3335fd49402781e406adf3f02d41bca": {
+    listWebhook: process.env.SMOLBODIES_LIST_WEBHOOK,
+    soldWebhook: process.env.SMOLBODIES_SOLD_WEBHOOK,
+  },
   // Smol Brains
   "0x6325439389e0797ab35752b4f43a14c004f22a9c": {
     listWebhook: process.env.SMOLBRAINS_LIST_WEBHOOK,
@@ -23,6 +28,11 @@ const collectionWebhooks = {
   },
   // Smol Cars
   "0xb16966dad2b5a5282b99846b23dcdf8c47b6132c": {
+    listWebhook: process.env.SMOLBRAINS_LIST_WEBHOOK,
+    soldWebhook: process.env.SMOLBRAINS_SOLD_WEBHOOK,
+  },
+  // Smol Brains Pets
+  "0xf6cc57c45ce730496b4d3df36b9a4e4c3a1b9754": {
     listWebhook: process.env.SMOLBRAINS_LIST_WEBHOOK,
     soldWebhook: process.env.SMOLBRAINS_SOLD_WEBHOOK,
   },
