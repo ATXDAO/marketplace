@@ -354,6 +354,9 @@ const Collection = () => {
   const isERC1155 =
     collectionData?.collection?.standard === TokenStandard.ERC1155;
 
+  const isLegions =
+    getCollectionNameFromAddress(formattedAddress, chainId) === "Legions";
+
   const searchFilters = React.useMemo(
     () => formatSearchFilter(formattedSearch),
     [formattedSearch]
@@ -383,10 +386,7 @@ const Collection = () => {
         name: searchParams,
       }),
     {
-      enabled:
-        !!formattedAddress &&
-        Boolean(searchParams) &&
-        getCollectionNameFromAddress(formattedAddress, chainId) !== "Legions",
+      enabled: !!formattedAddress && Boolean(searchParams) && !isLegions,
       refetchInterval: false,
     }
   );
@@ -400,10 +400,7 @@ const Collection = () => {
           name: searchParams,
         }),
       {
-        enabled:
-          !!formattedAddress &&
-          Boolean(searchParams) &&
-          getCollectionNameFromAddress(formattedAddress, chainId) === "Legions",
+        enabled: !!formattedAddress && Boolean(searchParams) && isLegions,
         refetchInterval: false,
       }
     );
@@ -461,7 +458,7 @@ const Collection = () => {
     }
   );
 
-  const { data: metadataData, isLoading: isMetadataLoading } = useQuery(
+  const { data: metadataData } = useQuery(
     ["metadata", formattedAddress, listingData, filteredTokenIds],
     () =>
       client.getCollectionMetadata({
@@ -476,10 +473,8 @@ const Collection = () => {
         }, []),
       }),
     {
-      enabled:
-        !!formattedAddress &&
-        !!listingData &&
-        getCollectionNameFromAddress(formattedAddress, chainId) !== "Legions",
+      enabled: !!formattedAddress && !!listingData && !isLegions,
+      keepPreviousData: true,
     }
   );
 
@@ -496,10 +491,8 @@ const Collection = () => {
           }, []) || [],
       }),
     {
-      enabled:
-        !!formattedAddress &&
-        !!listingData &&
-        getCollectionNameFromAddress(formattedAddress, chainId) === "Legions",
+      enabled: !!formattedAddress && !!listingData && isLegions,
+      keepPreviousData: true,
     }
   );
 
@@ -1089,7 +1082,7 @@ const Collection = () => {
                         {group.tokens
                           ?.filter((token) => Boolean(token?.listings?.length))
                           .map((token) => {
-                            const metadata = metadataData?.erc1155.find(
+                            const metadata = metadataData?.erc1155?.find(
                               (metadata) => metadata.tokenId === token.tokenId
                             );
 
@@ -1150,12 +1143,11 @@ const Collection = () => {
                               legionMetadataData?.tokens.find(
                                 (item) => item.id === listing.token.id
                               );
-                            const metadata =
-                              metadataData?.erc721?.find(
-                                (item) =>
-                                  item?.tokenId === listing.token.tokenId
-                              ) ??
-                              (legionsMetadata
+                            const erc721Metadata = metadataData?.erc721?.find(
+                              (item) => item?.tokenId === listing.token.tokenId
+                            );
+                            const metadata = isLegions
+                              ? legionsMetadata
                                 ? {
                                     id: legionsMetadata.id,
                                     name: legionsMetadata.name,
@@ -1166,7 +1158,8 @@ const Collection = () => {
                                       description: "Legions",
                                     },
                                   }
-                                : undefined);
+                                : erc721Metadata
+                              : erc721Metadata;
 
                             return (
                               <li key={listing.id} className="group">
