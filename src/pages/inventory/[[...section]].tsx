@@ -32,6 +32,7 @@ import {
   generateIpfsLink,
   getCollectionNameFromAddress,
   getCollectionSlugFromName,
+  getPetsMetadata,
 } from "../../utils";
 import { useRouter } from "next/router";
 import Button from "../../components/Button";
@@ -807,16 +808,17 @@ const Inventory = () => {
                             description: "Legions",
                           },
                         }
-                      : metadataData?.tokens.find(
+                      : getPetsMetadata(token) ??
+                        metadataData?.tokens.find(
                           (item) => item?.id === token.id
-                        ) ?? undefined;
+                        );
                     const { expires, pricePerItem } = {
                       ...item,
                       ...updates[
                         `${token.collection.contract}-${token.tokenId}`
                       ],
                     };
-                    const { quantity: listedQuantity, status = " None" } =
+                    const { quantity: listedQuantity, status = "None" } =
                       updates[
                         `${token.collection.contract}-${token.tokenId}`
                       ] ?? {};

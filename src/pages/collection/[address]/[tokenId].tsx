@@ -37,6 +37,7 @@ import {
   formatPrice,
   formattable,
   getCollectionNameFromAddress,
+  getPetsMetadata,
   slugToAddress,
 } from "../../../utils";
 import {
@@ -257,6 +258,10 @@ export default function Example() {
       legionMetadata.metadata) ||
     null;
 
+  const petsMetadata = getPetsMetadata({
+    ...tokenInfo,
+    collection: data?.collection ?? { name: "" },
+  } as any);
   const metadata = legionMetadata
     ? {
         attributes: legionMetadataMetadata
@@ -338,8 +343,7 @@ export default function Example() {
           "Legacy Legion"
         ),
       }
-    : null;
-
+    : (petsMetadata?.metadata as any) ?? null;
   const loading = isLoading || isIdle;
 
   const isYourListing =
