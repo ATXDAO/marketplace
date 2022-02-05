@@ -105,6 +105,7 @@ export const getCollectionListings = gql`
       orderDirection: $orderDirection
       where: { collection: $id, name_contains: $tokenName }
     ) @include(if: $isERC1155) {
+      __typename
       id
       floorPrice
       tokenId
@@ -120,6 +121,7 @@ export const getCollectionListings = gql`
       orderDirection: $orderDirection
       where: { status: Active, collection: $id }
     ) @include(if: $isERC721) {
+      __typename
       ...TokenListing
     }
     filtered: listings(
@@ -259,7 +261,7 @@ export const getTokenExistsInWallet = gql`
 
 export const getCollections = gql`
   query getCollections {
-    collections(orderBy: name) {
+    collections(orderBy: name, where: { name_not: "Legions" }) {
       contract
       name
     }

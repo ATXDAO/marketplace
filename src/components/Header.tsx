@@ -12,9 +12,13 @@ import {
   shortenAddress,
   ChainId,
   getChainName,
-} from "@yuyao17/corefork";
+} from "@usedapp/core";
 import { formatEther } from "ethers/lib/utils";
-import { formatNumber } from "../utils";
+import {
+  formatNumber,
+  getCollectionNameFromAddress,
+  slugToAddress,
+} from "../utils";
 import { Modal } from "./Modal";
 import { Item } from "react-stately";
 import { SearchAutocomplete } from "./SearchAutocomplete";
@@ -27,14 +31,15 @@ import MetaMaskSvg from "../../public/img/metamask.svg";
 import WalletConnectSvg from "../../public/img/walletconnect.svg";
 import Image from "next/image";
 import { WalletConnectConnector } from "@web3-react/walletconnect-connector";
-import { useCollections } from "../lib/hooks";
+import { useChainId, useCollections } from "../lib/hooks";
 import { getCollectionSlugFromName } from "../utils";
+import { AddressZero } from "@ethersproject/constants";
 
 const walletconnect = new WalletConnectConnector({
   rpc: {
     [ChainId.Arbitrum]: `https://arb-mainnet.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_ALCHEMY_KEY}`,
-    [ChainId.Rinkeby]:
-      "https://rinkeby.infura.io/v3/62687d1a985d4508b2b7a24827551934",
+    [ChainId.ArbitrumRinkeby]:
+      "https://arb-rinkeby.g.alchemy.com/v2/PDUCdHLoNrdDJwgVvCNPTx7MrHuQ0uBg",
   },
   qrcode: true,
 });
@@ -48,6 +53,7 @@ const Header = () => {
     chainId: currentChainId,
   } = useEthers();
   const [isOpenWalletModal, setIsOpenWalletModal] = useState(false);
+  const chainId = useChainId();
 
   const router = useRouter();
   const { address } = router.query;
@@ -62,6 +68,20 @@ const Header = () => {
   const onClose = () => setIsOpenWalletModal(false);
 
   const data = useCollections();
+
+  const formattedAddress = Array.isArray(address)
+    ? slugToAddress(address[0], chainId)
+    : slugToAddress(address?.toLowerCase() ?? AddressZero, chainId);
+
+  const collectionName = getCollectionNameFromAddress(
+    formattedAddress,
+    chainId
+  );
+
+  const showBwWarning = [
+    "Unpilgrimaged Legion Auxiliary",
+    "Unpilgrimaged Legion Genesis",
+  ].includes(collectionName ?? "");
 
   const switchToArbitrum = async () => {
     if (window.ethereum) {
@@ -342,6 +362,47 @@ const Header = () => {
               </div>
             </div>
           )}
+        {currentChainId &&
+          currentChainId === ChainId.Arbitrum &&
+          showBwWarning &&
+          process.env.NEXT_PUBLIC_VERCEL_ENV === "production" && (
+            <div className="bg-red-600">
+              <div className="py-3 px-3 sm:px-6 lg:px-8">
+                <div className="flex sm:items-center lg:justify-between flex-col space-y-2 sm:space-y-0 sm:flex-row">
+                  <div className="flex-1 flex items-center">
+                    <span className="flex p-2 rounded-lg bg-red-800">
+                      <SpeakerphoneIcon
+                        className="h-6 w-6 text-white"
+                        aria-hidden="true"
+                      />
+                    </span>
+                    <p className="ml-3 font-medium text-white">
+                      <span className="lg:hidden">
+                        Unpilgrimaged Legions have no utility in Bridgeworld.
+                      </span>
+                      <span className="hidden lg:block">
+                        Unpilgrimaged Legions have no utility in Bridgeworld.
+                        They MUST first go through Pilgrimage. Legions that have
+                        undergone Pilgrimage will be listed under the{" "}
+                        <Link href="/collection/legion-auxiliary">
+                          <a className="hover:underline">
+                            &apos;Legion Auxiliary&apos;
+                          </a>
+                        </Link>{" "}
+                        or{" "}
+                        <Link href="/collection/legion-genesis">
+                          <a className="hover:underline">
+                            &apos;Legion Genesis&apos;
+                          </a>
+                        </Link>{" "}
+                        collection.
+                      </span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
       </div>
       <Modal
         title="Convert between ETH and MAGIC"
@@ -396,9 +457,7 @@ const Header = () => {
           <button
             className="flex items-center justify-center flex-col hover:bg-gray-100 dark:hover:bg-gray-700 px-3 py-2 rounded-md"
             onClick={() => {
-              activateBrowserWallet((err) => {
-                console.log(err);
-              });
+              activateBrowserWallet();
               onClose();
             }}
           >

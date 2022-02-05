@@ -25,7 +25,7 @@ import {
   useRemoveListing,
   useUpdateListing,
 } from "../../lib/hooks";
-import { useEthers } from "@yuyao17/corefork";
+import { useEthers } from "@usedapp/core";
 import { AddressZero } from "@ethersproject/constants";
 import {
   formatNumber,
@@ -41,7 +41,7 @@ import Link from "next/link";
 import { CenterLoadingDots } from "../../components/CenterLoadingDots";
 import { formatEther } from "ethers/lib/utils";
 import { formatDistanceToNow } from "date-fns";
-import { FEE, USER_SHARE } from "../../const";
+import { BridgeworldItems, FEE, USER_SHARE } from "../../const";
 import { TokenStandard } from "../../../generated/queries.graphql";
 
 type DrawerProps = {
@@ -115,13 +115,13 @@ const Drawer = ({
     ].includes("Mining");
 
   const { data: statData } = useQuery(
-    ["stats", nft.address],
+    ["stats", nft.collectionId],
     () =>
       marketplace.getCollectionStats({
-        id: nft.address,
+        id: nft.collectionId,
       }),
     {
-      enabled: !!nft.address,
+      enabled: !!nft.collectionId,
     }
   );
 
@@ -663,14 +663,17 @@ const Inventory = () => {
   const tokens = (data as InventoryToken[])
     .filter(
       ({ token }) =>
-        getCollectionNameFromAddress(token.collection.id, chainId) !== "Legions"
+        !BridgeworldItems.includes(
+          getCollectionNameFromAddress(token.collection.id, chainId) || ""
+        )
     )
     .map(({ token }) => token.id);
 
-  const legions = (data as InventoryToken[])
-    .filter(
-      ({ token }) =>
-        getCollectionNameFromAddress(token.collection.id, chainId) === "Legions"
+  const bridgeworldTokens = (data as InventoryToken[])
+    .filter(({ token }) =>
+      BridgeworldItems.includes(
+        getCollectionNameFromAddress(token.collection.id, chainId) || ""
+      )
     )
     .map(({ token }) => token.id);
 
@@ -683,11 +686,11 @@ const Inventory = () => {
     }
   );
 
-  const { data: legionMetadataData } = useQuery(
-    ["inventory-metadata-legions", legions],
-    () => bridgeworld.getLegionMetadata({ ids: legions }),
+  const { data: bridgeworldMetadata } = useQuery(
+    ["inventory-metadata-bridgeworld", bridgeworldTokens],
+    () => bridgeworld.getBridgeworldMetadata({ ids: bridgeworldTokens }),
     {
-      enabled: legions.length > 0,
+      enabled: bridgeworldTokens.length > 0,
       refetchInterval: false,
     }
   );
@@ -794,18 +797,18 @@ const Inventory = () => {
                     const slugOrAddress =
                       getCollectionSlugFromName(token.collection.name) ??
                       token.collection.id;
-                    const legionsMetadata = legionMetadataData?.tokens.find(
+                    const bwMetadata = bridgeworldMetadata?.tokens.find(
                       (item) => item.id === token.id
                     );
-                    const metadata = legionsMetadata
+                    const metadata = bwMetadata
                       ? {
-                          id: legionsMetadata.id,
-                          name: legionsMetadata.name,
+                          id: bwMetadata.id,
+                          name: bwMetadata.name,
                           tokenId: token.tokenId,
                           metadata: {
-                            image: legionsMetadata.image,
-                            name: legionsMetadata.name,
-                            description: "Legions",
+                            image: bwMetadata.image,
+                            name: bwMetadata.name,
+                            description: token.collection.name,
                           },
                         }
                       : getPetsMetadata(token) ??
@@ -822,6 +825,8 @@ const Inventory = () => {
                       updates[
                         `${token.collection.contract}-${token.tokenId}`
                       ] ?? {};
+                    const buttonEnabled =
+                      section !== "sold" && bwMetadata?.name !== "Recruit";
 
                     return (
                       <li key={id}>
@@ -831,13 +836,13 @@ const Inventory = () => {
                               className={classNames(
                                 "object-fill object-center pointer-events-none",
                                 {
-                                  "group-hover:opacity-80": section !== "sold",
+                                  "group-hover:opacity-80": buttonEnabled,
                                 }
                               )}
                               token={metadata}
                             />
                           ) : null}
-                          {section !== "sold" ? (
+                          {buttonEnabled ? (
                             <button
                               type="button"
                               className="absolute inset-0 focus:outline-none"
@@ -845,8 +850,8 @@ const Inventory = () => {
                                 setNft({
                                   address: token.collection.contract,
                                   collection: token.collection.name,
-                                  name:
-                                    legionsMetadata?.name ?? token.name ?? "",
+                                  collectionId: token.collection.id,
+                                  name: bwMetadata?.name ?? token.name ?? "",
                                   listing:
                                     updates[
                                       `${token.collection.contract}-${token.tokenId}`
@@ -871,7 +876,7 @@ const Inventory = () => {
                             >
                               <span className="sr-only">
                                 View details for{" "}
-                                {legionsMetadata?.name ?? token.name}
+                                {bwMetadata?.name ?? token.name}
                               </span>
                             </button>
                           ) : null}

@@ -1,6 +1,6 @@
 import { formatEther } from "ethers/lib/utils";
 import { BigNumberish } from "ethers";
-import { ChainId } from "@yuyao17/corefork";
+import { ChainId } from "@usedapp/core";
 import { collections } from "./lib/hooks";
 import { utils } from "ethers";
 
@@ -17,7 +17,7 @@ function toFixed(num: number, fixed: number) {
 export const generateIpfsLink = (hash: string) => {
   const removedIpfs = hash.substring(7);
 
-  return `https://ipfs.io/ipfs/${removedIpfs}`;
+  return `https://treasure-marketplace.mypinata.cloud/ipfs/${removedIpfs}`;
 };
 
 export const formatNumber = (number: number) =>

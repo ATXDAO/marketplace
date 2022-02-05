@@ -14,7 +14,7 @@ import {
   getPetsMetadata,
 } from "../utils";
 import { useChainId } from "../lib/hooks";
-import { shortenAddress } from "@yuyao17/corefork";
+import { shortenAddress } from "@usedapp/core";
 import { useRouter } from "next/router";
 import ImageWrapper from "./ImageWrapper";
 import QueryLink from "./QueryLink";
@@ -23,6 +23,7 @@ import { Disclosure } from "@headlessui/react";
 import Link from "next/link";
 import { useQuery } from "react-query";
 import { bridgeworld, client } from "../lib/client";
+import { BridgeworldItems } from "../const";
 
 const sortOptions = [
   { name: "Highest Price", value: "price" },
@@ -42,16 +43,17 @@ const Listings = ({
   const tokens = listings
     .filter(
       (listing) =>
-        getCollectionNameFromAddress(listing.collection.id, chainId) !==
-        "Legions"
+        !BridgeworldItems.includes(
+          getCollectionNameFromAddress(listing.collection.id, chainId) || ""
+        )
     )
     .map((listing) => listing.token.id);
 
-  const legions = listings
-    .filter(
-      (listing) =>
-        getCollectionNameFromAddress(listing.collection.id, chainId) ===
-        "Legions"
+  const bridgeworldTokens = listings
+    .filter((listing) =>
+      BridgeworldItems.includes(
+        getCollectionNameFromAddress(listing.collection.id, chainId) || ""
+      )
     )
     .map((listing) => listing.token.id);
 
@@ -68,10 +70,10 @@ const Listings = ({
   );
 
   const { data: legionMetadataData } = useQuery(
-    ["activity-metadata-legions", legions],
-    () => bridgeworld.getLegionMetadata({ ids: legions }),
+    ["activity-metadata-bridgeworld", bridgeworldTokens],
+    () => bridgeworld.getBridgeworldMetadata({ ids: bridgeworldTokens }),
     {
-      enabled: legions.length > 0,
+      enabled: bridgeworldTokens.length > 0,
       refetchInterval: false,
     }
   );
@@ -209,7 +211,7 @@ const Listings = ({
                         metadata: {
                           image: legionsMetadata.image,
                           name: legionsMetadata.name,
-                          description: "Legions",
+                          description: collectionName ?? "Legions",
                         },
                       }
                     : getPetsMetadata({
@@ -308,6 +310,10 @@ const Listings = ({
               const legionsMetadata = legionMetadataData?.tokens.find(
                 (item) => item.id === listing.token.id
               );
+              const collectionName = getCollectionNameFromAddress(
+                listing?.collection?.id,
+                chainId
+              );
               const metadata = legionsMetadata
                 ? {
                     id: legionsMetadata.id,
@@ -316,17 +322,12 @@ const Listings = ({
                     metadata: {
                       image: legionsMetadata.image,
                       name: legionsMetadata.name,
-                      description: "Legions",
+                      description: collectionName ?? "Legions",
                     },
                   }
                 : metadataData?.tokens.find(
                     (item) => item?.id === listing.token.id
                   ) ?? undefined;
-
-              const collectionName = getCollectionNameFromAddress(
-                listing?.collection?.id,
-                chainId
-              );
 
               const slugOrAddress =
                 getCollectionSlugFromName(collectionName) ??
