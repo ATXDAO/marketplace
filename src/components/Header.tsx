@@ -158,15 +158,20 @@ const Header = () => {
                 </button>
               </div>
               <div className="py-6 px-4 space-y-6 flex-1">
-                {data.map((page) => (
-                  <div key={page.name} className="flow-root">
-                    <Link href={`/collection/${page.address}`} passHref>
-                      <a className="-m-2 p-2 block font-medium text-gray-900 dark:text-gray-200">
-                        {page.name}
-                      </a>
-                    </Link>
-                  </div>
-                ))}
+                {data.map((page) => {
+                  const slugOrAddress =
+                    getCollectionSlugFromName(page.name) ?? page.address;
+
+                  return (
+                    <div key={page.name} className="flow-root">
+                      <Link href={`/collection/${slugOrAddress}`} passHref>
+                        <a className="-m-2 p-2 block font-medium text-gray-900 dark:text-gray-200">
+                          {page.name}
+                        </a>
+                      </Link>
+                    </div>
+                  );
+                })}
               </div>
               {account && (
                 <div className="flex-shrink-0 flex flex-col items-center border-t border-gray-200 dark:border-gray-500 p-4">
