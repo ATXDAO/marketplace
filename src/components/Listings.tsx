@@ -369,7 +369,7 @@ const Listings = ({
                                   width="60%"
                                 />
                               ) : (
-                                <div className="animate-pulse w-full bg-gray-300 h-48 rounded-md m-auto" />
+                                <div className="animate-pulse w-24 bg-gray-300 h-24 rounded-md" />
                               )}
                               <span className="flex flex-col text-gray-500 space-y-1 text-sm truncate">
                                 <span className="truncate text-xs text-gray-400 uppercase">
