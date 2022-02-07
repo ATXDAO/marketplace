@@ -1188,6 +1188,13 @@ const Collection = () => {
                             const erc721Metadata = metadataData?.erc721?.find(
                               (item) => item?.tokenId === listing.token.tokenId
                             );
+
+                            const role =
+                              legionsMetadata?.metadata?.__typename ===
+                              "LegionInfo"
+                                ? legionsMetadata.metadata.role
+                                : null;
+
                             const metadata = isBridgeworldItem
                               ? legionsMetadata
                                 ? {
@@ -1230,6 +1237,7 @@ const Collection = () => {
                                 <div className="mt-4 font-medium text-gray-900 space-y-2">
                                   <p className="text-xs text-gray-500 dark:text-gray-300 truncate font-semibold">
                                     {metadata?.name}
+                                    {role ? ` - ${role}` : ""}
                                   </p>
                                   <p className="dark:text-gray-100 text-sm xl:text-base capsize">
                                     {formatNumber(
