@@ -307,12 +307,19 @@ const Listings = ({
             className="mt-2 divide-y divide-gray-200 dark:divide-gray-300 overflow-hidden"
           >
             {listings.map((listing) => {
-              const legionsMetadata = legionMetadataData?.tokens.find(
-                (item) => item.id === listing.token.id
-              );
               const collectionName = getCollectionNameFromAddress(
                 listing?.collection?.id,
                 chainId
+              );
+              const slugOrAddress =
+                getCollectionSlugFromName(collectionName) ??
+                listing.collection.id;
+
+              const legionsMetadata = legionMetadataData?.tokens.find(
+                (item) => item.id === listing.token.id
+              );
+              const legacyMetadata = metadataData?.tokens.find(
+                (item) => item?.id === listing.token.id
               );
               const metadata = legionsMetadata
                 ? {
@@ -325,13 +332,26 @@ const Listings = ({
                       description: collectionName ?? "Legions",
                     },
                   }
-                : metadataData?.tokens.find(
-                    (item) => item?.id === listing.token.id
-                  ) ?? undefined;
-
-              const slugOrAddress =
-                getCollectionSlugFromName(collectionName) ??
-                listing.collection.id;
+                : getPetsMetadata({
+                    ...listing.token,
+                    collection: { name: `${collectionName}` },
+                  }) ??
+                  (legacyMetadata?.metadata
+                    ? {
+                        id: legacyMetadata.id,
+                        name: legacyMetadata.name,
+                        tokenId: listing.token.tokenId,
+                        metadata: {
+                          image: legacyMetadata.metadata.image,
+                          name: legacyMetadata.metadata.name,
+                          description:
+                            legacyMetadata.metadata.description.replace(
+                              "Legion",
+                              "Legacy Legion"
+                            ),
+                        },
+                      }
+                    : undefined);
 
               return (
                 <Disclosure as="li" key={listing.id}>
