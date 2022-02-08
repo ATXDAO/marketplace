@@ -1328,7 +1328,7 @@ const Collection = () => {
                                     </p>
                                     {legionAttributes ? (
                                       <div>
-                                        <Popover.Root defaultOpen>
+                                        <Popover.Root>
                                           <Popover.Trigger asChild>
                                             <button>
                                               <InformationCircleIcon className="h-4 w-4 fill-gray-500" />
