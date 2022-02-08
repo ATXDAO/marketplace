@@ -1258,7 +1258,7 @@ const Collection = () => {
                                   {summonCount ? (
                                     <p className="text-xs text-[0.6rem] ml-auto whitespace-nowrap">
                                       <span className="text-gray-500 dark:text-gray-400">
-                                        Summon Count:
+                                        Times Summoned:
                                       </span>{" "}
                                       <span className="font-bold text-gray-700 dark:text-gray-300">
                                         {summonCount}

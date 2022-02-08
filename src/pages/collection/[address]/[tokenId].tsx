@@ -324,7 +324,7 @@ export default function Example() {
               },
               {
                 attribute: {
-                  name: "Summon Count",
+                  name: "Times Summoned",
                   value: formatNumber(
                     Number(legionMetadataMetadata.summons.toString())
                   ),
