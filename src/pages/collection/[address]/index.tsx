@@ -4,6 +4,7 @@ import { Dialog, Disclosure, Menu, Transition } from "@headlessui/react";
 import {
   ChevronDownIcon,
   FilterIcon,
+  InformationCircleIcon,
   MinusSmIcon,
   PlusSmIcon,
   XIcon,
@@ -44,6 +45,8 @@ import { EthIcon, MagicIcon, SwapIcon } from "../../../components/Icons";
 import { useMagic } from "../../../context/magicContext";
 import { ChainId } from "@usedapp/core";
 import { BridgeworldItems } from "../../../const";
+import * as Popover from "@radix-ui/react-popover";
+import { formatDistanceToNow } from "date-fns";
 
 const MAX_ITEMS_PER_PAGE = 42;
 
@@ -1219,6 +1222,83 @@ const Collection = () => {
                                   collection: collectionData.collection!,
                                 }) ?? erc721Metadata;
 
+                            const legionAttributes =
+                              legionsMetadata?.metadata?.__typename ===
+                              "LegionInfo"
+                                ? [
+                                    {
+                                      attribute: {
+                                        name: "Atlas Mine Boost",
+                                        value: formatPercent(
+                                          legionsMetadata.metadata.boost
+                                        ),
+                                        percentage: null,
+                                      },
+                                    },
+                                    {
+                                      attribute: {
+                                        name: "Summon Fatigue",
+                                        value: legionsMetadata.metadata.cooldown
+                                          ? formatDistanceToNow(
+                                              Number(
+                                                legionsMetadata.metadata.cooldown.toString()
+                                              )
+                                            )
+                                          : "None",
+                                        percentage: null,
+                                      },
+                                    },
+                                    {
+                                      attribute: {
+                                        name: "Crafting Level",
+                                        value:
+                                          legionsMetadata.metadata.crafting,
+                                        percentage: null,
+                                      },
+                                    },
+                                    {
+                                      attribute: {
+                                        name: "Questing Level",
+                                        value:
+                                          legionsMetadata.metadata.questing,
+                                        percentage: null,
+                                      },
+                                    },
+                                    {
+                                      attribute: {
+                                        name: "Rarity",
+                                        value: legionsMetadata.metadata.rarity,
+                                        percentage: null,
+                                      },
+                                    },
+                                    {
+                                      attribute: {
+                                        name: "Class",
+                                        value: legionsMetadata.metadata.role,
+                                        percentage: null,
+                                      },
+                                    },
+                                    {
+                                      attribute: {
+                                        name: "Type",
+                                        value: legionsMetadata.metadata.type,
+                                        percentage: null,
+                                      },
+                                    },
+                                    {
+                                      attribute: {
+                                        name: "Times Summoned",
+                                        value: formatNumber(
+                                          Number(
+                                            legionsMetadata.metadata.summons.toString()
+                                          )
+                                        ),
+                                        percentage: null,
+                                      },
+                                    },
+                                  ]
+                                : null;
+
                             return (
                               <li key={listing.id} className="group">
                                 <div className="block w-full aspect-w-1 aspect-h-1 rounded-sm overflow-hidden focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-offset-gray-100 focus-within:ring-red-500">
@@ -1241,10 +1321,49 @@ const Collection = () => {
                                   </Link>
                                 </div>
                                 <div className="mt-4 font-medium text-gray-900 space-y-2">
-                                  <p className="text-xs text-gray-500 dark:text-gray-300 truncate font-semibold">
-                                    {metadata?.name}
-                                    {role ? ` - ${role}` : ""}
-                                  </p>
+                                  <div className="flex justify-between items-center">
+                                    <p className="text-xs text-gray-500 dark:text-gray-300 truncate font-semibold">
+                                      {metadata?.name}
+                                      {role ? ` - ${role}` : ""}
+                                    </p>
+                                    {legionAttributes ? (
+                                      <div>
+                                        <Popover.Root defaultOpen>
+                                          <Popover.Trigger asChild>
+                                            <button>
+                                              <InformationCircleIcon className="h-4 w-4 fill-gray-500" />
+                                            </button>
+                                          </Popover.Trigger>
+                                          <Popover.Anchor />
+                                          <Popover.Content className="rounded-md w-60 border border-gray-100 dark:border-gray-600 bg-white dark:bg-gray-600 shadow-md text-gray-200 px-2 py-3">
+                                            <div className="space-y-2 flex items-center justify-center flex-col">
+                                              {legionAttributes.map(
+                                                (attribute) => (
+                                                  <div
+                                                    key={
+                                                      attribute.attribute.name
+                                                    }
+                                                    className="flex items-center justify-between w-full"
+                                                  >
+                                                    <p className="text-xs text-gray-700 font-bold dark:text-gray-300 truncate">
+                                                      {attribute.attribute.name}
+                                                    </p>
+                                                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                                                      {
+                                                        attribute.attribute
+                                                          .value
+                                                      }
+                                                    </p>
+                                                  </div>
+                                                )
+                                              )}
+                                            </div>
+                                            <Popover.Arrow className="text-gray-100 dark:text-gray-600 fill-current" />
+                                          </Popover.Content>
+                                        </Popover.Root>
+                                      </div>
+                                    ) : null}
+                                  </div>
                                   <p className="dark:text-gray-100 text-sm xl:text-base capsize">
                                     {formatNumber(
                                       parseFloat(
