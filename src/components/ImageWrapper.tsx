@@ -30,10 +30,7 @@ export default function ImageWrapper({
               "ipfs://QmUcEoYHwye65tsncGAtoz2bQLjQtrE2GiCa6L1PYNcbh7/0.png"
             )
           : token.metadata?.image.includes("ipfs")
-          ? generateIpfsLink(token.metadata.image).replace(
-              "Rare%20Ranged",
-              "Rare%20Ranger"
-            )
+          ? generateIpfsLink(token.metadata.image)
           : token.metadata?.image ?? "")
       }
       layout={Boolean(props.width) ? undefined : "fill"}
