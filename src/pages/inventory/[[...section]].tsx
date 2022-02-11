@@ -238,6 +238,9 @@ const Drawer = ({
                                   min="0"
                                   autoComplete="off"
                                   aria-describedby="price-currency"
+                                  onWheel={(event) =>
+                                    (event.target as HTMLInputElement).blur()
+                                  }
                                   onChange={(event) => {
                                     const { value, maxLength } = event.target;
                                     const price = value.slice(0, maxLength);
