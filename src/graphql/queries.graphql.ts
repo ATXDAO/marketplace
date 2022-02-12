@@ -13,25 +13,8 @@ export const getCollectionAttributes = gql`
 `;
 
 export const getCollectionMetadata = gql`
-  query getCollectionMetadata(
-    $id: String!
-    $tokenId_in: [BigInt!]!
-    $isERC1155: Boolean!
-  ) {
-    erc721: tokens(
-      first: 1000
-      where: { collection: $id, tokenId_in: $tokenId_in }
-    ) @skip(if: $isERC1155) {
-      metadata {
-        image
-        name
-        description
-      }
-      name
-      tokenId
-    }
-    erc1155: tokens(first: 1000, where: { collection: $id })
-      @include(if: $isERC1155) {
+  query getCollectionMetadata($ids: [ID!]!) {
+    tokens(first: 1000, where: { id_in: $ids }) {
       metadata {
         image
         name
@@ -66,10 +49,11 @@ export const getTokenMetadata = gql`
 `;
 
 export const getFilteredTokens = gql`
-  query getFilteredTokens($ids: [ID!]!) {
-    attributes(where: { id_in: $ids }) {
+  query getFilteredTokens($attributeIds: [String!]!, $tokenIds: [String!]!) {
+    metadataAttributes(
+      where: { attribute_in: $attributeIds, metadata_in: $tokenIds }
+    ) {
       id
-      _tokenIds
     }
   }
 `;

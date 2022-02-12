@@ -32,6 +32,7 @@ import {
   GetCollectionListingsQuery,
   Listing_OrderBy,
   OrderDirection,
+  Status,
   TokenStandard,
 } from "../../../../generated/marketplace.graphql";
 import classNames from "clsx";
@@ -144,7 +145,7 @@ function assertUnreachable(): never {
   throw new Error("Didn't expect to get here");
 }
 
-const MapSortToOrder = (sort: string) => {
+const sortToField = (sort: string) => {
   if (sort === "latest") {
     return Listing_OrderBy.blockTimestamp;
   }
@@ -152,7 +153,7 @@ const MapSortToOrder = (sort: string) => {
   return Listing_OrderBy.pricePerItem;
 };
 
-const MapSortToEnum = (sort: string) => {
+const sortToDirection = (sort: string) => {
   switch (sort) {
     case "asc":
       return OrderDirection.asc;
@@ -327,7 +328,7 @@ const Collection = () => {
   const chainId = useChainId();
   const { ethPrice } = useMagic();
 
-  const sortParam = sort ?? OrderDirection.asc;
+  const sortParam = Array.isArray(sort) ? sort[0] : sort ?? OrderDirection.asc;
   const activitySortParam = activitySort ?? "time";
   const formattedAddress = Array.isArray(slugOrAddress)
     ? slugToAddress(slugOrAddress[0], chainId)
@@ -458,323 +459,266 @@ const Collection = () => {
 
   const isBridgeworldItem = BridgeworldItems.includes(collectionName ?? "");
   const isTreasure = collectionName === "Treasures";
-  const isLegion = collectionName?.startsWith("Legion");
 
-  const searchFilters = React.useMemo(
-    () => formatSearchFilter(formattedSearch),
-    [formattedSearch]
-  );
-
-  const { data: filteredData, isLoading: isFilterDataLoading } = useQuery(
-    ["filtered-tokens", formattedAddress, filters, searchFilters],
-    () => {
-      const ids = searchFilters.map(
-        (filter) =>
-          `${formattedAddress}-${filter.toLowerCase().replace(",", "-")}`
-      );
-
-      return client.getFilteredTokens({ ids });
-    },
+  // First get all possible listed tokens
+  const listedTokens = useQuery(
+    ["listed-tokens", formattedAddress],
+    () =>
+      marketplace.getCollectionsListedTokens({ collection: formattedAddress }),
     {
-      enabled: searchFilters.length > 0 && !isBridgeworldItem,
-      refetchInterval: false,
+      enabled: !!formattedAddress,
+      select: React.useCallback(
+        (
+          data: Awaited<
+            ReturnType<typeof marketplace.getCollectionsListedTokens>
+          >
+        ) => Array.from(new Set(data.listings.map(({ token }) => token.id))),
+        []
+      ),
     }
   );
 
-  const { data: filteredTreasureData, isLoading: isFilterTreasureDataLoading } =
-    useQuery(
-      ["treasure-filtered-tokens", { filters }] as const,
-      ({ queryKey }) => {
-        const filters = Object.entries(queryKey[1].filters).reduce(
-          (acc, [key, [value]]) => {
+  // Use listed tokenIds to retrieve any filters
+  const attributeIds = React.useMemo(
+    () =>
+      formatSearchFilter(formattedSearch).map(
+        (filter) =>
+          `${formattedAddress}-${filter.toLowerCase().replace(",", "-")}`
+      ),
+    [formattedAddress, formattedSearch]
+  );
+  const filteredSmolTokens = useQuery(
+    ["filtered-tokens", listedTokens.data, attributeIds],
+    () =>
+      client.getFilteredTokens({
+        attributeIds,
+        tokenIds: listedTokens.data ?? [],
+      }),
+    {
+      enabled:
+        Boolean(listedTokens.data) &&
+        attributeIds.length > 0 &&
+        !isBridgeworldItem,
+      select: React.useCallback(
+        ({
+          metadataAttributes,
+        }: Awaited<ReturnType<typeof client.getFilteredTokens>>) => {
+          const sections = metadataAttributes.reduce<Record<string, string[]>>(
+            (acc, { id }) => {
+              const [, token, collection, key] = id.split("-");
+
+              acc[key] ??= [];
+              acc[key] = [...acc[key], `${collection}-${token}`];
+
+              return acc;
+            },
+            {}
+          );
+
+          return Object.keys(sections).reduce((acc, key) => {
+            const items = sections[key];
+
+            return acc.length > 0
+              ? acc.filter((item) => items.includes(item))
+              : items;
+          }, []);
+        },
+        []
+      ),
+    }
+  );
+  const filteredBridgeworldTokens = useQuery(
+    ["bw-filtered-tokens", listedTokens.data, filters],
+    () =>
+      bridgeworld.getFilteredLegions({
+        filters: {
+          id_in: listedTokens.data?.map((id) => `${id}-metadata`),
+          ...Object.entries(filters).reduce((acc, [key, [value]]) => {
+            switch (key) {
+              case "Summon Fatigue":
+                acc["cooldown_gte"] = addDays(new Date(), Number(value[0]))
+                  .getTime()
+                  .toString();
+
+                break;
+              case "Times Summoned":
+                acc["summons_in"] = value.split(",");
+
+                break;
+              case "Atlas Mine Boost":
+                acc["boost_in"] = value
+                  .split(",")
+                  .map(
+                    (choice) =>
+                      BOOST[
+                        attributeFilterList?.["Atlas Mine Boost"]?.findIndex(
+                          (item) => item.value === choice
+                        ) ?? 0
+                      ]
+                  );
+
+                break;
+              case "Crafting Level":
+              case "Questing Level":
+                acc[`${key.toLowerCase().replace(" level", "")}_in`] = value
+                  .split(",")
+                  .map(Number);
+
+                break;
+              case "Crafting XP":
+              case "Questing XP":
+                acc[`${key.toLowerCase().replace(" xp", "")}_gte`] = Number(
+                  value.split(",")[0].replace(/[^\d]+/, "")
+                );
+
+                break;
+              default:
+                acc[`${key.toLowerCase()}_in`] = value.split(",");
+            }
+
+            return acc;
+          }, {}),
+        },
+      }),
+    {
+      enabled:
+        Boolean(listedTokens.data) &&
+        Object.keys(filters).length > 0 &&
+        isBridgeworldItem,
+      select: React.useCallback(
+        (data: Awaited<ReturnType<typeof bridgeworld.getFilteredLegions>>) =>
+          data.legionInfos.map((item) => item.id.replace("-metadata", "")),
+        []
+      ),
+    }
+  );
+  const filteredTreasureTokens = useQuery(
+    ["treasure-filtered-tokens", listedTokens.data, filters],
+    () =>
+      bridgeworld.getFilteredTreasures({
+        filters: {
+          id_in: listedTokens.data?.map((id) => `${id}-metadata`),
+          ...Object.entries(filters).reduce((acc, [key, [value]]) => {
             acc[`${key.toLowerCase()}_in`] = value
               .split(",")
               .map((item) => (key === "Tier" ? Number(item) : item));
 
             return acc;
-          },
-          {}
-        );
-
-        return bridgeworld.getFilteredTreasures({ filters });
-      },
-      {
-        enabled: searchFilters.length > 0 && isTreasure,
-        refetchInterval: false,
-      }
-    );
-
-  const {
-    data: filteredLegionData,
-    isLoading: isFilterLegionDataLoading,
-    fetchNextPage: fetchMoreTokens,
-    hasNextPage: hasMoreTokens,
-  } = useInfiniteQuery(
-    ["legion-filtered-tokens", { filters }] as const,
-    ({ pageParam, queryKey }) => {
-      const filters = Object.entries(queryKey[1].filters).reduce(
-        (acc, [key, [value]]) => {
-          switch (key) {
-            case "Summon Fatigue":
-              acc["cooldown_gte"] = addDays(new Date(), Number(value[0]))
-                .getTime()
-                .toString();
-
-              break;
-            case "Times Summoned":
-              acc["summons_in"] = value.split(",");
-
-              break;
-            case "Atlas Mine Boost":
-              acc["boost_in"] = value
-                .split(",")
-                .map(
-                  (choice) =>
-                    BOOST[
-                      attributeFilterList?.["Atlas Mine Boost"]?.findIndex(
-                        (item) => item.value === choice
-                      ) ?? 0
-                    ]
-                );
-
-              break;
-            case "Crafting Level":
-            case "Questing Level":
-              acc[`${key.toLowerCase().replace(" level", "")}_in`] = value
-                .split(",")
-                .map(Number);
-
-              break;
-            case "Crafting XP":
-            case "Questing XP":
-              acc[`${key.toLowerCase().replace(" xp", "")}_gte`] = Number(
-                value.split(",")[0].replace(/[^\d]+/, "")
-              );
-
-              break;
-            default:
-              acc[`${key.toLowerCase()}_in`] = value.split(",");
-          }
-
-          return acc;
+          }, {}),
         },
-        {}
-      );
-
-      return bridgeworld.getFilteredLegions({
-        filters: { ...filters, id_gt: pageParam },
-      });
-    },
-    {
-      enabled: searchFilters.length > 0 && isLegion,
-      getNextPageParam: (last) => {
-        const { legionInfos } = last;
-
-        if (legionInfos.length < 1000) {
-          return;
-        }
-
-        const [{ id }] = legionInfos.slice(-1);
-
-        return id;
-      },
-      refetchInterval: false,
-    }
-  );
-
-  const isFilterBridgeworldDataLoading =
-    isFilterLegionDataLoading || isFilterTreasureDataLoading;
-
-  React.useEffect(() => {
-    if (hasMoreTokens) {
-      fetchMoreTokens();
-    }
-  }, [fetchMoreTokens, hasMoreTokens]);
-
-  const {
-    data: searchedMarketplaceData,
-    isLoading: isMarketplaceSearchedDataLoading,
-  } = useQuery(
-    ["marketplace-searched-tokens", searchParams],
-    () =>
-      marketplace.getTokensByName({
-        collection: formattedAddress,
-        name: searchParams,
       }),
     {
       enabled:
-        !!formattedAddress && Boolean(searchParams) && !isBridgeworldItem,
-      refetchInterval: false,
+        Boolean(listedTokens.data) &&
+        Object.keys(filters).length > 0 &&
+        isTreasure,
+      select: React.useCallback(
+        (data: Awaited<ReturnType<typeof bridgeworld.getFilteredTreasures>>) =>
+          data.treasureInfos.map((item) => item.id.replace("-metadata", "")),
+        []
+      ),
     }
   );
 
-  const { data: searchedLegionsData, isLoading: isLegionsSearchedDataLoading } =
-    useQuery(
-      ["legions-searched-tokens", searchParams],
-      () =>
-        bridgeworld.getTokensByName({
-          collection: formattedAddress,
-          name: searchParams,
-        }),
-      {
-        enabled:
-          !!formattedAddress && Boolean(searchParams) && isBridgeworldItem,
-        refetchInterval: false,
-      }
-    );
-
-  const isSearchedDataLoading =
-    isMarketplaceSearchedDataLoading || isLegionsSearchedDataLoading;
-
-  const searchedData = React.useMemo(
-    () => [
-      ...(searchedLegionsData?.tokens?.map((token) => token.id) ?? []),
-      ...(searchedMarketplaceData?.tokens?.map((token) => token.id) ?? []),
-    ],
-    [searchedLegionsData, searchedMarketplaceData]
-  );
-
-  const filteredTokenIds = React.useMemo(() => {
-    const filtersBySection =
-      filteredData?.attributes?.reduce((acc, value) => {
-        const { id, _tokenIds } = value;
-        const [, key] = id.split("-");
-
-        acc[key] ??= [];
-        acc[key] = Array.from(new Set([...acc[key], ..._tokenIds]));
-
-        return acc;
-      }, {}) ?? {};
-    const filters: string[] = Object.keys(filtersBySection)
-      .reduce((acc, key) => {
-        const items = filtersBySection[key];
-
-        return acc.length > 0
-          ? acc.filter((item) => items.includes(item))
-          : items;
-      }, [])
-      .map(
-        (tokenId: string) =>
-          `${formattedAddress}-0x${Number(tokenId).toString(16)}`
-      );
-
-    return [
-      ...(
-        filteredLegionData?.pages?.map((page) =>
-          page.legionInfos.map((token) => token.id.replace("-metadata", ""))
-        ) ?? []
-      ).flat(),
-      ...(filteredTreasureData?.treasureInfos?.map((token) =>
-        token.id.replace("-metadata", "")
-      ) ?? []),
-      ...filters,
-      ...searchedData,
-    ];
-  }, [
-    filteredData?.attributes,
-    filteredLegionData?.pages,
-    filteredTreasureData?.treasureInfos,
-    formattedAddress,
-    searchedData,
-  ]);
-
-  const {
-    data: listingData,
-    isLoading: isListingLoading,
-    fetchNextPage,
-  } = useInfiniteQuery(
+  // Use filtered or listed tokenIds to perform text search
+  const searchedTokens = useQuery(
     [
-      "listings",
-      { formattedAddress, sortParam, searchParams, search, filteredTokenIds },
-    ] as const,
-    ({ queryKey: [, queryKey], pageParam = 0 }) => {
-      const tokenName = queryKey.searchParams;
-      const hasFilters = Boolean(queryKey.search);
-      const erc1155Filters = { collection: formattedAddress };
-
-      // No results from filtering
-      if (hasFilters && filteredTokenIds.length === 0) {
-        return Promise.resolve({ filtered: [] });
-      }
-
-      if (tokenName) {
-        erc1155Filters["name_contains"] = tokenName;
-      }
-
-      if (filteredTokenIds.length > 0) {
-        erc1155Filters["id_in"] = filteredTokenIds;
-      }
-
-      return marketplace.getCollectionListings({
-        id: formattedAddress,
-        isERC1155,
-        isERC721: !isERC1155 && filteredTokenIds.length === 0,
-        tokenName,
-        skipBy: pageParam,
-        first: MAX_ITEMS_PER_PAGE,
-        orderBy: sort
-          ? MapSortToOrder(Array.isArray(sort) ? sort[0] : sort)
-          : Listing_OrderBy.pricePerItem,
-        orderDirection: sort
-          ? MapSortToEnum(Array.isArray(sort) ? sort[0] : sort)
-          : OrderDirection.asc,
-        filteredTokenIds,
-        erc1155Filters,
-        withFilters: !isERC1155 && filteredTokenIds.length > 0,
-      });
-    },
-    {
-      enabled: !!formattedAddress && !!collectionData,
-      getNextPageParam: (_, pages) => pages.length * MAX_ITEMS_PER_PAGE,
-    }
-  );
-
-  const { data: metadataData } = useQuery(
-    ["metadata", formattedAddress, listingData, filteredTokenIds],
+      "searched-token",
+      filteredTreasureTokens.data,
+      filteredBridgeworldTokens.data,
+      filteredSmolTokens.data,
+      listedTokens.data,
+      searchParams,
+    ],
     () =>
-      client.getCollectionMetadata({
-        id: formattedAddress,
-        isERC1155,
-        tokenId_in: listingData?.pages.reduce((acc, page) => {
-          const tokenIds =
-            (page.listings ?? page.filtered)?.map(
-              (list) => list.token.tokenId
-            ) || [];
-          return [...acc, ...tokenIds];
-        }, []),
-      }),
-    {
-      enabled: !!formattedAddress && !!listingData && !isBridgeworldItem,
-      refetchInterval: false,
-      keepPreviousData: true,
-    }
-  );
-
-  const { data: bridgeworldMetadataData } = useQuery(
-    ["metadata-bridgeworld", listingData, formattedAddress],
-    () =>
-      bridgeworld.getBridgeworldMetadata({
+      marketplace.getTokensByName({
+        name: searchParams,
         ids:
-          listingData?.pages.reduce((acc, page) => {
-            const tokenIds = isERC1155
-              ? page.tokens
-              : page.listings ?? page.filtered;
-            const ids =
-              tokenIds?.map((value: NonNullable<typeof tokenIds>[number]) => {
-                if (value.__typename === "Listing") {
-                  return value.token.id;
-                }
-
-                return value.id;
-              }) || [];
-            return [...acc, ...ids];
-          }, []) || [],
+          filteredTreasureTokens.data ??
+          filteredBridgeworldTokens.data ??
+          filteredSmolTokens.data ??
+          listedTokens.data ??
+          [],
       }),
     {
-      enabled: !!formattedAddress && !!listingData && isBridgeworldItem,
+      enabled: Boolean(listedTokens.data) && Boolean(searchParams),
+      refetchInterval: false,
+      select: React.useCallback(
+        (data: Awaited<ReturnType<typeof marketplace.getTokensByName>>) =>
+          data.tokens.map((token) => token.id),
+        []
+      ),
+    }
+  );
+
+  // Use final list of tokens to paginate listings
+  const tokenIds = React.useMemo(
+    () =>
+      searchedTokens.data ??
+      filteredTreasureTokens.data ??
+      filteredBridgeworldTokens.data ??
+      filteredSmolTokens.data ??
+      listedTokens.data,
+    [
+      searchedTokens.data,
+      filteredTreasureTokens.data,
+      filteredBridgeworldTokens.data,
+      filteredSmolTokens.data,
+      listedTokens.data,
+    ]
+  );
+  const listings = useInfiniteQuery(
+    ["listings", tokenIds],
+    ({ pageParam = 0 }) =>
+      marketplace.getCollectionListings({
+        erc1155Filters: {
+          id_in: tokenIds,
+        },
+        erc721Filters: {
+          status: Status.Active,
+          token_in: tokenIds,
+        },
+        erc721Ordering: sortToField(sortParam),
+        isERC1155,
+        orderDirection: sortToDirection(sortParam),
+        skip: pageParam,
+      }),
+    {
+      enabled: !!tokenIds,
+      getNextPageParam: (last, pages) =>
+        last.listings?.length === MAX_ITEMS_PER_PAGE
+          ? pages.length * MAX_ITEMS_PER_PAGE
+          : undefined,
+      refetchInterval: false,
+    }
+  );
+
+  const smolMetadata = useQuery(
+    ["metadata", tokenIds],
+    () => client.getCollectionMetadata({ ids: tokenIds ?? [] }),
+    {
+      enabled: !!tokenIds && !isBridgeworldItem,
       refetchInterval: false,
       keepPreviousData: true,
     }
+  );
+
+  const bridgeworldMetadata = useQuery(
+    ["bw-metadata", tokenIds],
+    () => bridgeworld.getBridgeworldMetadata({ ids: tokenIds ?? [] }),
+    {
+      enabled: !!tokenIds && isBridgeworldItem,
+      refetchInterval: false,
+      keepPreviousData: true,
+    }
+  );
+
+  const isLoading = React.useMemo(
+    () =>
+      [listings.status, smolMetadata.status, bridgeworldMetadata.status].every(
+        (status) => ["idle", "loading"].includes(status)
+      ),
+    [listings.status, smolMetadata.status, bridgeworldMetadata.status]
   );
 
   // reset searchParams on address change
@@ -783,20 +727,15 @@ const Collection = () => {
     setSearchToken("");
   }, [formattedAddress]);
 
-  const page = listingData?.pages[listingData.pages.length - 1];
-  const data = isERC1155 ? page?.tokens : page?.listings ?? page?.filtered;
-
-  const hasNextPage = data?.length === MAX_ITEMS_PER_PAGE;
-
   const { ref, inView } = useInView({
     threshold: 0,
   });
 
   useEffect(() => {
     if (inView) {
-      fetchNextPage();
+      listings.fetchNextPage();
     }
-  }, [fetchNextPage, inView]);
+  }, [listings, inView]);
 
   const listingsWithoutDuplicates =
     statData?.collection?.listings.reduce((acc, curr) => {
@@ -1283,7 +1222,7 @@ const Collection = () => {
                             aria-hidden="true"
                           />
                         </Menu.Button>
-                        {!isERC1155 && (
+                        {attributeFilterList && (
                           <button
                             type="button"
                             className="p-2 -m-2 text-gray-400 hover:text-gray-500 lg:hidden"
@@ -1344,22 +1283,16 @@ const Collection = () => {
                   </div>
                 )}
               </section>
-              {isListingLoading || isFilterDataLoading ? (
+              {isLoading ? (
                 <CenterLoadingDots className="h-60" />
-              ) : null}
-              {data?.length === 0 && !isListingLoading && (
+              ) : tokenIds?.length === 0 ? (
                 <div className="flex flex-col justify-center items-center h-36">
                   <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-gray-200">
                     No NFTs listed 😞
                   </h3>
                 </div>
-              )}
-              {listingData &&
-              collectionData &&
-              !isListingLoading &&
-              !isFilterDataLoading &&
-              !isFilterBridgeworldDataLoading &&
-              !isSearchedDataLoading ? (
+              ) : null}
+              {collectionData && !isLoading ? (
                 <section aria-labelledby="products-heading" className="my-8">
                   <h2 id="products-heading" className="sr-only">
                     {collectionData.collection?.name}
@@ -1368,18 +1301,19 @@ const Collection = () => {
                     role="list"
                     className="grid grid-cols-2 gap-y-10 sm:grid-cols-4 gap-x-6 lg:grid-cols-6 xl:gap-x-8"
                   >
-                    {listingData.pages.map((group, i) => (
+                    {listings.data?.pages.map((group, i) => (
                       <React.Fragment key={i}>
                         {/* ERC1155 */}
                         {group.tokens
                           ?.filter((token) => Boolean(token?.listings?.length))
                           .map((token) => {
-                            const erc1155Metadata = metadataData?.erc1155?.find(
-                              (metadata) => metadata.tokenId === token.tokenId
-                            );
+                            const erc1155Metadata =
+                              smolMetadata.data?.tokens?.find(
+                                (metadata) => metadata.tokenId === token.tokenId
+                              );
 
                             const legionsMetadata =
-                              bridgeworldMetadataData?.tokens.find(
+                              bridgeworldMetadata.data?.tokens.find(
                                 (item) => item.id === token.id
                               );
 
@@ -1448,217 +1382,209 @@ const Collection = () => {
                             );
                           })}
                         {/* ERC721 */}
-                        {(group?.listings ?? group?.filtered)?.map(
-                          (listing) => {
-                            const legionsMetadata =
-                              bridgeworldMetadataData?.tokens.find(
-                                (item) => item.id === listing.token.id
-                              );
-                            const erc721Metadata = metadataData?.erc721?.find(
-                              (item) => item?.tokenId === listing.token.tokenId
+                        {group.listings?.map((listing) => {
+                          const legionsMetadata =
+                            bridgeworldMetadata.data?.tokens.find(
+                              (item) => item.id === listing.token.id
+                            );
+                          const erc721Metadata =
+                            smolMetadata.data?.tokens?.find(
+                              (item) => item.tokenId === listing.token.tokenId
                             );
 
-                            const role =
-                              legionsMetadata?.metadata?.__typename ===
-                              "LegionInfo"
-                                ? legionsMetadata.metadata.role
-                                : null;
+                          const role =
+                            legionsMetadata?.metadata?.__typename ===
+                            "LegionInfo"
+                              ? legionsMetadata.metadata.role
+                              : null;
 
-                            const summonCount =
-                              legionsMetadata?.metadata?.__typename ===
-                              "LegionInfo"
-                                ? legionsMetadata.metadata.summons
-                                : null;
+                          const summonCount =
+                            legionsMetadata?.metadata?.__typename ===
+                            "LegionInfo"
+                              ? legionsMetadata.metadata.summons
+                              : null;
 
-                            const metadata = isBridgeworldItem
-                              ? legionsMetadata
-                                ? {
-                                    id: legionsMetadata.id,
+                          const metadata = isBridgeworldItem
+                            ? legionsMetadata
+                              ? {
+                                  id: legionsMetadata.id,
+                                  name: legionsMetadata.name,
+                                  tokenId: listing.token.tokenId,
+                                  metadata: {
+                                    image: legionsMetadata.image,
                                     name: legionsMetadata.name,
-                                    tokenId: listing.token.tokenId,
-                                    metadata: {
-                                      image: legionsMetadata.image,
-                                      name: legionsMetadata.name,
-                                      description: "Legions",
-                                    },
-                                  }
-                                : erc721Metadata
-                              : getPetsMetadata({
-                                  ...listing.token,
-                                  collection: collectionData.collection!,
-                                }) ?? erc721Metadata;
+                                    description: "Legions",
+                                  },
+                                }
+                              : erc721Metadata
+                            : getPetsMetadata({
+                                ...listing.token,
+                                collection: collectionData.collection!,
+                              }) ?? erc721Metadata;
 
-                            const legionAttributes =
-                              legionsMetadata?.metadata?.__typename ===
-                              "LegionInfo"
-                                ? [
-                                    {
-                                      attribute: {
-                                        name: "Atlas Mine Boost",
-                                        value: formatPercent(
-                                          legionsMetadata.metadata.boost
-                                        ),
-                                        percentage: null,
-                                      },
+                          const legionAttributes =
+                            legionsMetadata?.metadata?.__typename ===
+                            "LegionInfo"
+                              ? [
+                                  {
+                                    attribute: {
+                                      name: "Atlas Mine Boost",
+                                      value: formatPercent(
+                                        legionsMetadata.metadata.boost
+                                      ),
+                                      percentage: null,
                                     },
-                                    {
-                                      attribute: {
-                                        name: "Summon Fatigue",
-                                        value: legionsMetadata.metadata.cooldown
-                                          ? formatDistanceToNow(
-                                              Number(
-                                                legionsMetadata.metadata.cooldown.toString()
-                                              )
+                                  },
+                                  {
+                                    attribute: {
+                                      name: "Summon Fatigue",
+                                      value: legionsMetadata.metadata.cooldown
+                                        ? formatDistanceToNow(
+                                            Number(
+                                              legionsMetadata.metadata.cooldown.toString()
                                             )
-                                          : "None",
-                                        percentage: null,
-                                      },
-                                    },
-                                    {
-                                      attribute: {
-                                        name: "Crafting Level",
-                                        value:
-                                          legionsMetadata.metadata.crafting,
-                                        percentage: null,
-                                      },
-                                    },
-                                    {
-                                      attribute: {
-                                        name: "Questing Level",
-                                        value:
-                                          legionsMetadata.metadata.questing,
-                                        percentage: null,
-                                      },
-                                    },
-                                    {
-                                      attribute: {
-                                        name: "Rarity",
-                                        value: legionsMetadata.metadata.rarity,
-                                        percentage: null,
-                                      },
-                                    },
-                                    {
-                                      attribute: {
-                                        name: "Class",
-                                        value: legionsMetadata.metadata.role,
-                                        percentage: null,
-                                      },
-                                    },
-                                    {
-                                      attribute: {
-                                        name: "Type",
-                                        value: legionsMetadata.metadata.type,
-                                        percentage: null,
-                                      },
-                                    },
-                                    {
-                                      attribute: {
-                                        name: "Times Summoned",
-                                        value: formatNumber(
-                                          Number(
-                                            legionsMetadata.metadata.summons.toString()
                                           )
-                                        ),
-                                        percentage: null,
-                                      },
+                                        : "None",
+                                      percentage: null,
                                     },
-                                  ]
-                                : null;
+                                  },
+                                  {
+                                    attribute: {
+                                      name: "Crafting Level",
+                                      value: legionsMetadata.metadata.crafting,
+                                      percentage: null,
+                                    },
+                                  },
+                                  {
+                                    attribute: {
+                                      name: "Questing Level",
+                                      value: legionsMetadata.metadata.questing,
+                                      percentage: null,
+                                    },
+                                  },
+                                  {
+                                    attribute: {
+                                      name: "Rarity",
+                                      value: legionsMetadata.metadata.rarity,
+                                      percentage: null,
+                                    },
+                                  },
+                                  {
+                                    attribute: {
+                                      name: "Class",
+                                      value: legionsMetadata.metadata.role,
+                                      percentage: null,
+                                    },
+                                  },
+                                  {
+                                    attribute: {
+                                      name: "Type",
+                                      value: legionsMetadata.metadata.type,
+                                      percentage: null,
+                                    },
+                                  },
+                                  {
+                                    attribute: {
+                                      name: "Times Summoned",
+                                      value: formatNumber(
+                                        Number(
+                                          legionsMetadata.metadata.summons.toString()
+                                        )
+                                      ),
+                                      percentage: null,
+                                    },
+                                  },
+                                ]
+                              : null;
 
-                            return (
-                              <li key={listing.id} className="group">
-                                <div className="block w-full aspect-w-1 aspect-h-1 rounded-sm overflow-hidden focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-offset-gray-100 focus-within:ring-red-500">
-                                  {metadata ? (
-                                    <ImageWrapper
-                                      className="w-full h-full object-center object-fill group-hover:opacity-75"
-                                      token={metadata}
-                                    />
-                                  ) : (
-                                    <div className="animate-pulse w-full bg-gray-300 h-64 rounded-md m-auto" />
-                                  )}
-                                  <Link
-                                    href={`/collection/${slugOrAddress}/${listing.token.tokenId}`}
-                                  >
-                                    <a className="absolute inset-0 focus:outline-none">
-                                      <span className="sr-only">
-                                        View details for {metadata?.name}
-                                      </span>
-                                    </a>
-                                  </Link>
-                                </div>
-                                <div className="mt-4 font-medium text-gray-900 space-y-2">
-                                  <div className="flex justify-between items-center">
-                                    <p className="text-xs text-gray-500 dark:text-gray-300 truncate font-semibold">
-                                      {metadata?.name}
-                                      {role ? ` - ${role}` : ""}
-                                    </p>
-                                    {legionAttributes ? (
-                                      <div>
-                                        <Popover.Root>
-                                          <Popover.Trigger asChild>
-                                            <button>
-                                              <InformationCircleIcon className="h-4 w-4 fill-gray-500" />
-                                            </button>
-                                          </Popover.Trigger>
-                                          <Popover.Anchor />
-                                          <Popover.Content className="rounded-md w-60 border border-gray-100 dark:border-gray-600 bg-white dark:bg-gray-600 shadow-md text-gray-200 px-2 py-3">
-                                            <div className="space-y-2 flex items-center justify-center flex-col">
-                                              {legionAttributes.map(
-                                                (attribute) => (
-                                                  <div
-                                                    key={
-                                                      attribute.attribute.name
-                                                    }
-                                                    className="flex items-center justify-between w-full"
-                                                  >
-                                                    <p className="text-xs text-gray-700 font-bold dark:text-gray-300 truncate">
-                                                      {attribute.attribute.name}
-                                                    </p>
-                                                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                                                      {
-                                                        attribute.attribute
-                                                          .value
-                                                      }
-                                                    </p>
-                                                  </div>
-                                                )
-                                              )}
-                                            </div>
-                                            <Popover.Arrow className="text-gray-100 dark:text-gray-600 fill-current" />
-                                          </Popover.Content>
-                                        </Popover.Root>
-                                      </div>
-                                    ) : null}
-                                  </div>
-                                  <p className="dark:text-gray-100 text-sm xl:text-base capsize">
-                                    {formatNumber(
-                                      parseFloat(
-                                        formatEther(listing.pricePerItem)
-                                      )
-                                    )}{" "}
-                                    <span className="text-[0.5rem] xl:text-xs font-light">
-                                      $MAGIC
+                          return (
+                            <li key={listing.id} className="group">
+                              <div className="block w-full aspect-w-1 aspect-h-1 rounded-sm overflow-hidden focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-offset-gray-100 focus-within:ring-red-500">
+                                {metadata ? (
+                                  <ImageWrapper
+                                    className="w-full h-full object-center object-fill group-hover:opacity-75"
+                                    token={metadata}
+                                  />
+                                ) : (
+                                  <div className="animate-pulse w-full bg-gray-300 h-64 rounded-md m-auto" />
+                                )}
+                                <Link
+                                  href={`/collection/${slugOrAddress}/${listing.token.tokenId}`}
+                                >
+                                  <a className="absolute inset-0 focus:outline-none">
+                                    <span className="sr-only">
+                                      View details for {metadata?.name}
                                     </span>
+                                  </a>
+                                </Link>
+                              </div>
+                              <div className="mt-4 font-medium text-gray-900 space-y-2">
+                                <div className="flex justify-between items-center">
+                                  <p className="text-xs text-gray-500 dark:text-gray-300 truncate font-semibold">
+                                    {metadata?.name}
+                                    {role ? ` - ${role}` : ""}
                                   </p>
-                                  {summonCount ? (
-                                    <p className="text-xs text-[0.6rem] ml-auto whitespace-nowrap">
-                                      <span className="text-gray-500 dark:text-gray-400">
-                                        Times Summoned:
-                                      </span>{" "}
-                                      <span className="font-bold text-gray-700 dark:text-gray-300">
-                                        {summonCount}
-                                      </span>
-                                    </p>
+                                  {legionAttributes ? (
+                                    <div>
+                                      <Popover.Root>
+                                        <Popover.Trigger asChild>
+                                          <button>
+                                            <InformationCircleIcon className="h-4 w-4 fill-gray-500" />
+                                          </button>
+                                        </Popover.Trigger>
+                                        <Popover.Anchor />
+                                        <Popover.Content className="rounded-md w-60 border border-gray-100 dark:border-gray-600 bg-white dark:bg-gray-600 shadow-md text-gray-200 px-2 py-3">
+                                          <div className="space-y-2 flex items-center justify-center flex-col">
+                                            {legionAttributes.map(
+                                              (attribute) => (
+                                                <div
+                                                  key={attribute.attribute.name}
+                                                  className="flex items-center justify-between w-full"
+                                                >
+                                                  <p className="text-xs text-gray-700 font-bold dark:text-gray-300 truncate">
+                                                    {attribute.attribute.name}
+                                                  </p>
+                                                  <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                                                    {attribute.attribute.value}
+                                                  </p>
+                                                </div>
+                                              )
+                                            )}
+                                          </div>
+                                          <Popover.Arrow className="text-gray-100 dark:text-gray-600 fill-current" />
+                                        </Popover.Content>
+                                      </Popover.Root>
+                                    </div>
                                   ) : null}
                                 </div>
-                              </li>
-                            );
-                          }
-                        )}
+                                <p className="dark:text-gray-100 text-sm xl:text-base capsize">
+                                  {formatNumber(
+                                    parseFloat(
+                                      formatEther(listing.pricePerItem)
+                                    )
+                                  )}{" "}
+                                  <span className="text-[0.5rem] xl:text-xs font-light">
+                                    $MAGIC
+                                  </span>
+                                </p>
+                                {summonCount ? (
+                                  <p className="text-xs text-[0.6rem] ml-auto whitespace-nowrap">
+                                    <span className="text-gray-500 dark:text-gray-400">
+                                      Times Summoned:
+                                    </span>{" "}
+                                    <span className="font-bold text-gray-700 dark:text-gray-300">
+                                      {summonCount}
+                                    </span>
+                                  </p>
+                                ) : null}
+                              </div>
+                            </li>
+                          );
+                        })}
                       </React.Fragment>
                     ))}
                   </ul>
-                  {hasNextPage && (
+                  {listings.hasNextPage && (
                     <ul
                       role="list"
                       ref={ref}

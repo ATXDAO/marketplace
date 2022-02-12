@@ -30,20 +30,9 @@ export const getBridgeworldMetadata = gql`
   }
 `;
 
-export const getTokensByName = gql`
-  query getTokensByName($name: String!, $collection: Bytes!) {
-    tokens(
-      first: 1000
-      where: { name_contains: $name, contract: $collection }
-    ) {
-      id
-    }
-  }
-`;
-
 export const getFilteredLegions = gql`
   query getFilteredLegions($filters: LegionInfo_filter!) {
-    legionInfos(first: 1000, where: $filters, orderBy: id) {
+    legionInfos(first: 1000, where: $filters) {
       id
     }
   }

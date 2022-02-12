@@ -88,20 +88,17 @@ export const getCollectionStats = gql`
 
 export const getCollectionListings = gql`
   query getCollectionListings(
-    $id: String!
-    $orderDirection: OrderDirection!
-    $tokenName: String
-    $skipBy: Int!
-    $first: Int!
-    $orderBy: Listing_orderBy!
-    $filteredTokenIds: [String!]!
-    $erc1155Filters: Token_filter!
-    $isERC721: Boolean!
+    $erc1155Filters: Token_filter
+    $erc1155Ordering: Token_orderBy
+    $erc721Filters: Listing_filter
+    $erc721Ordering: Listing_orderBy
     $isERC1155: Boolean!
-    $withFilters: Boolean!
+    $orderDirection: OrderDirection
+    $skip: Int
   ) {
     tokens(
-      first: 1000
+      first: 200 # This is okay as we will pull all the Treasures
+      # orderBy: $erc1155Ordering
       orderBy: floorPrice
       orderDirection: $orderDirection
       where: $erc1155Filters
@@ -116,48 +113,32 @@ export const getCollectionListings = gql`
       }
     }
     listings(
-      first: $first
-      skip: $skipBy
-      orderBy: $orderBy
+      first: 42
+      orderBy: $erc721Ordering
       orderDirection: $orderDirection
-      where: { status: Active, collection: $id }
-    ) @include(if: $isERC721) {
-      ...TokenListing
-    }
-    filtered: listings(
-      first: $first
-      skip: $skipBy
-      orderBy: $orderBy
-      orderDirection: $orderDirection
-      where: { status: Active, collection: $id, token_in: $filteredTokenIds }
-    ) @include(if: $withFilters) {
-      ...TokenListing
-    }
-  }
-
-  fragment TokenListing on Listing {
-    __typename
-    seller {
+      skip: $skip
+      where: $erc721Filters
+    ) @skip(if: $isERC1155) {
+      __typename
+      seller {
+        id
+      }
+      expires
       id
+      pricePerItem
+      token {
+        id
+        tokenId
+        name
+      }
+      quantity
     }
-    expires
-    id
-    pricePerItem
-    token {
-      id
-      tokenId
-      name
-    }
-    quantity
   }
 `;
 
 export const getTokensByName = gql`
-  query getTokensByName($name: String!, $collection: String!) {
-    tokens(
-      first: 1000
-      where: { name_contains: $name, collection: $collection }
-    ) {
+  query getTokensByName($name: String!, $ids: [ID!]!) {
+    tokens(first: 1000, where: { name_contains: $name, id_in: $ids }) {
       id
     }
   }
@@ -302,6 +283,20 @@ export const getTokenDetails = gql`
             id
           }
         }
+      }
+    }
+  }
+`;
+
+export const getCollectionsListedTokens = gql`
+  query getCollectionsListedTokens($collection: String!) {
+    listings(
+      first: 1000
+      where: { collection: $collection, status: Active }
+      orderBy: id
+    ) {
+      token {
+        id
       }
     }
   }
