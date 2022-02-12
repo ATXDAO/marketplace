@@ -70,6 +70,7 @@ const RARITY = ["Legendary", "Rare", "Special", "Uncommon", "Common"];
 const AUX_RARITY = [RARITY[1], ...RARITY.slice(-2)];
 
 const FATIGUE = [
+  "None",
   "1 Day",
   "2 Days",
   "3 Days",
@@ -536,9 +537,13 @@ const Collection = () => {
           ...Object.entries(filters).reduce((acc, [key, [value]]) => {
             switch (key) {
               case "Summon Fatigue":
-                acc["cooldown_gte"] = addDays(new Date(), Number(value[0]))
-                  .getTime()
-                  .toString();
+                if (value === "None") {
+                  acc["cooldown"] = null;
+                } else {
+                  acc["cooldown_gte"] = addDays(new Date(), Number(value[0]))
+                    .getTime()
+                    .toString();
+                }
 
                 break;
               case "Times Summoned":
