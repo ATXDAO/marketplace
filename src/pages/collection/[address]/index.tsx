@@ -300,6 +300,8 @@ const removeFilter = (
   return new URLSearchParams(combined).toString();
 };
 
+const unique = <T,>(array: T[]) => Array.from(new Set(array));
+
 const Collection = () => {
   const router = useRouter();
   const {
@@ -332,6 +334,9 @@ const Collection = () => {
     formattedAddress,
     chainId
   );
+
+  const isBridgeworldItem = BridgeworldItems.includes(collectionName ?? "");
+  const isTreasure = collectionName === "Treasures";
 
   // This is a faux collection with only recruits. Which are not sellable. Redirect to Legion Auxiliary collection.
   if (collectionName === "Legions") {
@@ -376,11 +381,25 @@ const Collection = () => {
       refetchInterval: false,
     }
   );
+  const treasureBoosts = useQuery(
+    ["treasure-boosts"],
+    () => bridgeworld.getTreasureBoosts(),
+    {
+      enabled: isTreasure,
+      refetchInterval: false,
+      select: (data) => unique(data.treasureInfos.map((item) => item.boost)),
+    }
+  );
 
   const attributeFilterList = React.useMemo(() => {
     switch (true) {
       case collectionName === "Treasures":
         return {
+          "Atlas Mine Boost":
+            treasureBoosts.data?.map((value) => ({
+              value: formatPercent(value),
+              percentage: null,
+            })) ?? [],
           Category: CATEGORY.map((value) => ({ value, percentage: null })),
           Tier: TIERS.map((value) => ({ value, percentage: null })),
         };
@@ -424,7 +443,11 @@ const Collection = () => {
           collectionAttributesData?.collection?.attributes
         );
     }
-  }, [collectionAttributesData?.collection?.attributes, collectionName]);
+  }, [
+    collectionAttributesData?.collection?.attributes,
+    collectionName,
+    treasureBoosts.data,
+  ]);
 
   const { data: statData } = useQuery(
     ["stats", formattedAddress],
@@ -449,9 +472,6 @@ const Collection = () => {
   const isERC1155 =
     collectionData?.collection?.standard === TokenStandard.ERC1155;
 
-  const isBridgeworldItem = BridgeworldItems.includes(collectionName ?? "");
-  const isTreasure = collectionName === "Treasures";
-
   // First get all possible listed tokens
   const listedTokens = useQuery(
     ["listed-tokens", formattedAddress],
@@ -464,7 +484,7 @@ const Collection = () => {
           data: Awaited<
             ReturnType<typeof marketplace.getCollectionsListedTokens>
           >
-        ) => Array.from(new Set(data.listings.map(({ token }) => token.id))),
+        ) => unique(data.listings.map(({ token }) => token.id)),
         []
       ),
     }
@@ -538,13 +558,8 @@ const Collection = () => {
               case "Atlas Mine Boost":
                 acc["boost_in"] = value
                   .split(",")
-                  .map(
-                    (choice) =>
-                      BOOST[
-                        attributeFilterList?.["Atlas Mine Boost"]?.findIndex(
-                          (item) => item.value === choice
-                        ) ?? 0
-                      ]
+                  .map((choice) =>
+                    (Number(choice.replace("%", "")) / 100).toString()
                   );
 
                 break;
@@ -589,9 +604,20 @@ const Collection = () => {
         filters: {
           id_in: listedTokens.data?.map((id) => `${id}-metadata`),
           ...Object.entries(filters).reduce((acc, [key, [value]]) => {
-            acc[`${key.toLowerCase()}_in`] = value
-              .split(",")
-              .map((item) => (key === "Tier" ? Number(item) : item));
+            switch (key) {
+              case "Atlas Mine Boost":
+                acc["boost_in"] = value
+                  .split(",")
+                  .map((choice) =>
+                    (Number(choice.replace("%", "")) / 100).toString()
+                  );
+
+                break;
+              default:
+                acc[`${key.toLowerCase()}_in`] = value
+                  .split(",")
+                  .map((item) => (key === "Tier" ? Number(item) : item));
+            }
 
             return acc;
           }, {}),

@@ -45,3 +45,10 @@ export const getFilteredTreasures = gql`
     }
   }
 `;
+export const getTreasureBoosts = gql`
+  query getTreasureBoosts {
+    treasureInfos(first: 200, orderBy: boost) {
+      boost
+    }
+  }
+`;
