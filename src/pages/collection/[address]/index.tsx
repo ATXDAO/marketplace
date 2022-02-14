@@ -1553,7 +1553,7 @@ const Collection = () => {
                                   </span>
                                 </p>
                                 {legionStats?.summons ? (
-                                  <p className="text-xs text-[0.6rem] ml-auto whitespace-nowrap">
+                                  <p className="text-xs text-[0.5rem] ml-auto whitespace-nowrap">
                                     <span className="text-gray-500 dark:text-gray-400">
                                       Summoned:
                                     </span>{" "}
