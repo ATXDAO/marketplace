@@ -263,7 +263,7 @@ export default function Example() {
     collection: data?.collection ?? { name: "" },
   } as any);
   const metadata = bridgeworldMetadata
-    ? normalizeBridgeworldTokenMetadata(bridgeworldMetadata as BridgeworldToken)
+    ? normalizeBridgeworldTokenMetadata(bridgeworldMetadata)
     : legacyMetadata?.metadata
     ? {
         ...legacyMetadata.metadata,

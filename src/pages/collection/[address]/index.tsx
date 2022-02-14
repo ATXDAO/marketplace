@@ -48,6 +48,8 @@ import { ChainId } from "@usedapp/core";
 import { BridgeworldItems } from "../../../const";
 import * as Popover from "@radix-ui/react-popover";
 import { addDays, formatDistanceToNow } from "date-fns";
+import { normalizeBridgeworldTokenMetadata } from "../../../utils/metadata";
+import { BridgeworldToken } from "../../../types";
 
 const MAX_ITEMS_PER_PAGE = 42;
 
@@ -1438,80 +1440,8 @@ const Collection = () => {
                                 collection: collectionData.collection!,
                               }) ?? erc721Metadata;
 
-                          const legionAttributes =
-                            legionsMetadata?.metadata?.__typename ===
-                            "LegionInfo"
-                              ? [
-                                  {
-                                    attribute: {
-                                      name: "Atlas Mine Boost",
-                                      value: formatPercent(
-                                        legionsMetadata.metadata.boost
-                                      ),
-                                      percentage: null,
-                                    },
-                                  },
-                                  {
-                                    attribute: {
-                                      name: "Summon Fatigue",
-                                      value: legionsMetadata.metadata.cooldown
-                                        ? formatDistanceToNow(
-                                            Number(
-                                              legionsMetadata.metadata.cooldown.toString()
-                                            )
-                                          )
-                                        : "None",
-                                      percentage: null,
-                                    },
-                                  },
-                                  {
-                                    attribute: {
-                                      name: "Crafting Level",
-                                      value: legionsMetadata.metadata.crafting,
-                                      percentage: null,
-                                    },
-                                  },
-                                  {
-                                    attribute: {
-                                      name: "Questing Level",
-                                      value: legionsMetadata.metadata.questing,
-                                      percentage: null,
-                                    },
-                                  },
-                                  {
-                                    attribute: {
-                                      name: "Rarity",
-                                      value: legionsMetadata.metadata.rarity,
-                                      percentage: null,
-                                    },
-                                  },
-                                  {
-                                    attribute: {
-                                      name: "Class",
-                                      value: legionsMetadata.metadata.role,
-                                      percentage: null,
-                                    },
-                                  },
-                                  {
-                                    attribute: {
-                                      name: "Type",
-                                      value: legionsMetadata.metadata.type,
-                                      percentage: null,
-                                    },
-                                  },
-                                  {
-                                    attribute: {
-                                      name: "Times Summoned",
-                                      value: formatNumber(
-                                        Number(
-                                          legionsMetadata.metadata.summons.toString()
-                                        )
-                                      ),
-                                      percentage: null,
-                                    },
-                                  },
-                                ]
-                              : null;
+                          const normalizedLegion =
+                            normalizeBridgeworldTokenMetadata(legionsMetadata);
 
                           return (
                             <li key={listing.id} className="group">
@@ -1540,7 +1470,7 @@ const Collection = () => {
                                     {metadata?.name}
                                     {role ? ` - ${role}` : ""}
                                   </p>
-                                  {legionAttributes ? (
+                                  {normalizedLegion ? (
                                     <div>
                                       <Popover.Root>
                                         <Popover.Trigger asChild>
@@ -1551,21 +1481,21 @@ const Collection = () => {
                                         <Popover.Anchor />
                                         <Popover.Content className="rounded-md w-60 border border-gray-100 dark:border-gray-600 bg-white dark:bg-gray-600 shadow-md text-gray-200 px-2 py-3">
                                           <div className="space-y-2 flex items-center justify-center flex-col">
-                                            {legionAttributes.map(
-                                              (attribute) => (
-                                                <div
-                                                  key={attribute.attribute.name}
-                                                  className="flex items-center justify-between w-full"
-                                                >
-                                                  <p className="text-xs text-gray-700 font-bold dark:text-gray-300 truncate">
-                                                    {attribute.attribute.name}
-                                                  </p>
-                                                  <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                                                    {attribute.attribute.value}
-                                                  </p>
-                                                </div>
-                                              )
-                                            )}
+                                            {(
+                                              normalizedLegion.attributes ?? []
+                                            ).map((attribute) => (
+                                              <div
+                                                key={attribute.attribute.name}
+                                                className="flex items-center justify-between w-full"
+                                              >
+                                                <p className="text-xs text-gray-600 font-bold dark:text-gray-400 truncate">
+                                                  {attribute.attribute.name}
+                                                </p>
+                                                <p className="text-xs text-gray-500 dark:text-gray-300 truncate">
+                                                  {attribute.attribute.value}
+                                                </p>
+                                              </div>
+                                            ))}
                                           </div>
                                           <Popover.Arrow className="text-gray-100 dark:text-gray-600 fill-current" />
                                         </Popover.Content>

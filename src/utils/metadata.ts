@@ -1,11 +1,46 @@
 import { formatDistanceToNow } from "date-fns";
+import { GetBridgeworldMetadataQuery } from "../../generated/bridgeworld.graphql";
 
-import { BridgeworldToken, NormalizedMetadata } from "../types";
+import { NormalizedMetadata } from "../types";
 import { formatNumber, formatPercent } from "../utils";
 
+function getCraftingMaxXpPerLevel(level: number): number {
+  switch (level) {
+    case 1:
+      return 140;
+    case 2:
+    case 3:
+    case 4:
+      return 160;
+    case 5:
+      return 480;
+    default:
+      return 0;
+  }
+}
+
+function getQuestingMaxXpPerLevel(level: number): number {
+  switch (level) {
+    case 1:
+      return 100;
+    case 2:
+      return 200;
+    case 3:
+      return 500;
+    case 4:
+      return 1000;
+    case 5:
+      return 2000;
+    default:
+      return 0;
+  }
+}
+
 export function normalizeBridgeworldTokenMetadata(
-  token: BridgeworldToken
-): NormalizedMetadata {
+  token: GetBridgeworldMetadataQuery["tokens"][number] | undefined
+) {
+  if (!token) return null;
+
   const metadata = token.metadata;
   const tokenMetadata: NormalizedMetadata = {
     id: token.id,
@@ -51,13 +86,17 @@ export function normalizeBridgeworldTokenMetadata(
       {
         attribute: {
           name: "Crafting Level",
-          value: metadata.crafting,
+          value: `${metadata.crafting} (${
+            metadata.craftingXp
+          }/${getCraftingMaxXpPerLevel(metadata.crafting)})`,
         },
       },
       {
         attribute: {
           name: "Questing Level",
-          value: metadata.questing,
+          value: `${metadata.questing} (${
+            metadata.questingXp
+          }/${getQuestingMaxXpPerLevel(metadata.questing)})`,
         },
       },
       {
