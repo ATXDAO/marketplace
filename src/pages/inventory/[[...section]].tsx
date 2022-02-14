@@ -43,6 +43,7 @@ import { formatEther } from "ethers/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import { BridgeworldItems, FEE, USER_SHARE } from "../../const";
 import { TokenStandard } from "../../../generated/queries.graphql";
+import { useMagic } from "../../context/magicContext";
 
 type DrawerProps = {
   actions: Array<"create" | "remove" | "update">;
@@ -105,6 +106,7 @@ const Drawer = ({
   const createListing = useCreateListing();
   const removeListing = useRemoveListing();
   const updateListing = useUpdateListing();
+  const { ethPrice } = useMagic();
 
   const isFormDisabled =
     needsContractApproval ||
@@ -465,13 +467,23 @@ const Drawer = ({
                               <p className="text-gray-400">
                                 Your share ({USER_SHARE * 100 + "%"})
                               </p>
-                              <p>
-                                ≈{" "}
-                                {formatNumber(
-                                  parseFloat(price || "0") * USER_SHARE
-                                )}{" "}
-                                $MAGIC
-                              </p>
+                              <div className="flex">
+                                <p>
+                                  ≈{" "}
+                                  {formatNumber(
+                                    parseFloat(price || "0") * USER_SHARE
+                                  )}{" "}
+                                  $MAGIC
+                                </p>
+                                <p className="mx-1 text-gray-400">/</p>
+                                <p>
+                                  {formatNumber(
+                                    parseFloat(price || "0") *
+                                      parseFloat(ethPrice)
+                                  )}{" "}
+                                  ETH
+                                </p>
+                              </div>
                             </div>
                           </div>
                           <div>
