@@ -47,9 +47,7 @@ import { useMagic } from "../../../context/magicContext";
 import { ChainId } from "@usedapp/core";
 import { BridgeworldItems } from "../../../const";
 import * as Popover from "@radix-ui/react-popover";
-import { addDays, formatDistanceToNow } from "date-fns";
 import { normalizeBridgeworldTokenMetadata } from "../../../utils/metadata";
-import { BridgeworldToken } from "../../../types";
 
 const MAX_ITEMS_PER_PAGE = 42;
 
@@ -574,7 +572,7 @@ const Collection = () => {
                 break;
               case "Crafting XP":
               case "Questing XP":
-                acc[`${key.toLowerCase().replace(" xp", "")}_gte`] = Number(
+                acc[`${key.toLowerCase().replace(" xp", "Xp")}_gte`] = Number(
                   value.split(",")[0].replace(/[^\d]+/, "")
                 );
 
