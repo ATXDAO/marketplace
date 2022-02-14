@@ -227,6 +227,9 @@ const Drawer = ({
                                   ? " Per Item"
                                   : ""}
                               </label>
+                              <p className="text-xs text-gray-500 my-1">
+                                * No need for decimals as a separator.
+                              </p>
                               <div className="mt-1 relative rounded-md shadow-sm">
                                 <input
                                   type="number"
