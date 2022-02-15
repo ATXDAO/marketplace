@@ -47,9 +47,7 @@ import { useMagic } from "../../../context/magicContext";
 import { ChainId } from "@usedapp/core";
 import { BridgeworldItems } from "../../../const";
 import * as Popover from "@radix-ui/react-popover";
-import { addDays, formatDistanceToNow } from "date-fns";
 import { normalizeBridgeworldTokenMetadata } from "../../../utils/metadata";
-import { BridgeworldToken } from "../../../types";
 
 const MAX_ITEMS_PER_PAGE = 42;
 
@@ -574,7 +572,7 @@ const Collection = () => {
                 break;
               case "Crafting XP":
               case "Questing XP":
-                acc[`${key.toLowerCase().replace(" xp", "")}_gte`] = Number(
+                acc[`${key.toLowerCase().replace(" xp", "Xp")}_gte`] = Number(
                   value.split(",")[0].replace(/[^\d]+/, "")
                 );
 
@@ -1317,7 +1315,9 @@ const Collection = () => {
                   </h2>
                   <ul
                     role="list"
-                    className="grid grid-cols-2 gap-y-10 sm:grid-cols-4 gap-x-6 lg:grid-cols-6 xl:gap-x-8"
+                    className={`grid grid-cols-2 gap-y-10 sm:grid-cols-4 gap-x-6 lg:grid-cols-4 xl:grid-cols-${
+                      attributeFilterList ? "4" : "6"
+                    } xl:gap-x-8`}
                   >
                     {listings.data?.pages.map((group, i) => (
                       <React.Fragment key={i}>
@@ -1510,7 +1510,7 @@ const Collection = () => {
                                     {role ? ` - ${role}` : ""}
                                   </p>
                                   {normalizedLegion ? (
-                                    <div>
+                                    <div className="flex">
                                       <Popover.Root>
                                         <Popover.Trigger asChild>
                                           <button>
@@ -1553,7 +1553,7 @@ const Collection = () => {
                                   </span>
                                 </p>
                                 {legionStats?.summons ? (
-                                  <p className="text-xs text-[0.5rem] ml-auto whitespace-nowrap">
+                                  <p className="xl:text-xs text-[0.5rem] ml-auto whitespace-nowrap">
                                     <span className="text-gray-500 dark:text-gray-400">
                                       Summoned:
                                     </span>{" "}
@@ -1566,7 +1566,7 @@ const Collection = () => {
                                       Questing:
                                     </span>{" "}
                                     <span className="font-bold text-gray-700 dark:text-gray-300">
-                                      Level {legionStats.questing} (
+                                      Lv. {legionStats.questing} (
                                       {legionStats.questingXp}/
                                       {legionStats.questingTotal} XP)
                                     </span>
@@ -1575,7 +1575,7 @@ const Collection = () => {
                                       Crafting:
                                     </span>{" "}
                                     <span className="font-bold text-gray-700 dark:text-gray-300">
-                                      Level {legionStats.crafting} (
+                                      Lv. {legionStats.crafting} (
                                       {legionStats.craftingXp}/
                                       {legionStats.craftingTotal} XP)
                                     </span>
