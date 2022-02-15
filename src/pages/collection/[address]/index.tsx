@@ -67,9 +67,9 @@ const ROLES = [
 
 const AUX_ROLES = ROLES.slice(0, 5);
 
-const RARITY = ["Legendary", "Rare", "Special", "Uncommon", "Common"];
+const RARITY = ["Legendary", "Rare", "Uncommon", "Special", "Common"];
 
-const AUX_RARITY = [RARITY[1], ...RARITY.slice(-2)];
+const AUX_RARITY = ["Rare", "Uncommon", "Common"];
 
 const FATIGUE = ["Yes", "No"];
 
