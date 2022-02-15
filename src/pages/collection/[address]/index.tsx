@@ -1315,9 +1315,13 @@ const Collection = () => {
                   </h2>
                   <ul
                     role="list"
-                    className={`grid grid-cols-2 gap-y-10 sm:grid-cols-4 gap-x-6 lg:grid-cols-4 xl:grid-cols-${
-                      attributeFilterList ? "4" : "6"
-                    } xl:gap-x-8`}
+                    className={classNames(
+                      "grid grid-cols-2 gap-y-10 sm:grid-cols-4 gap-x-6 xl:gap-x-8",
+                      {
+                        "lg:grid-cols-4": attributeFilterList,
+                        "lg:grid-cols-6": !attributeFilterList,
+                      }
+                    )}
                   >
                     {listings.data?.pages.map((group, i) => (
                       <React.Fragment key={i}>
