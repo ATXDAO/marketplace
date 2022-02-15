@@ -1,4 +1,4 @@
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, isAfter } from "date-fns";
 import { GetBridgeworldMetadataQuery } from "../../generated/bridgeworld.graphql";
 
 import { NormalizedMetadata } from "../types";
@@ -68,6 +68,13 @@ export function normalizeBridgeworldTokenMetadata(
     ];
   } else if (metadata?.__typename === "LegionInfo") {
     tokenMetadata.description = "Legions";
+
+    const cooldownValue =
+      !metadata.cooldown ||
+      isAfter(new Date(), new Date(Number(metadata.cooldown)))
+        ? "None"
+        : formatDistanceToNow(Number(metadata.cooldown));
+
     tokenMetadata.attributes = [
       {
         attribute: {
@@ -78,9 +85,7 @@ export function normalizeBridgeworldTokenMetadata(
       {
         attribute: {
           name: "Summon Fatigue",
-          value: metadata.cooldown
-            ? formatDistanceToNow(Number(metadata.cooldown.toString()))
-            : "None",
+          value: cooldownValue,
         },
       },
       {
