@@ -2,8 +2,10 @@ import {
   ChevronDownIcon,
   ExternalLinkIcon,
   ChevronRightIcon,
+  ShoppingCartIcon,
 } from "@heroicons/react/solid";
-import { Fragment } from "react";
+import { CurrencyDollarIcon } from "@heroicons/react/outline";
+import { FC, Fragment } from "react";
 import { ListingFieldsFragment } from "../../generated/marketplace.graphql";
 import { Menu, Transition } from "@headlessui/react";
 import { formatDistanceToNow } from "date-fns";
@@ -14,7 +16,7 @@ import {
   getPetsMetadata,
 } from "../utils";
 import { useChainId } from "../lib/hooks";
-import { shortenAddress } from "@usedapp/core";
+import { shortenAddress, useEthers } from "@usedapp/core";
 import { useRouter } from "next/router";
 import ImageWrapper from "./ImageWrapper";
 import QueryLink from "./QueryLink";
@@ -30,15 +32,22 @@ const sortOptions = [
   { name: "Latest", value: "time" },
 ];
 
-const Listings = ({
-  listings,
-  sort,
-}: {
+type ListingProps = {
   listings: ListingFieldsFragment[];
   sort: string | string[];
+  title?: string;
+  includeStatus?: boolean;
+};
+
+const Listings: FC<ListingProps> = ({
+  listings,
+  sort,
+  title,
+  includeStatus,
 }) => {
   const router = useRouter();
   const chainId = useChainId();
+  const { account } = useEthers();
 
   const tokens = listings
     .filter(
@@ -78,12 +87,21 @@ const Listings = ({
     }
   );
 
+  const getListingStatus = (listing: ListingFieldsFragment) => {
+    const me = account?.toLowerCase();
+    if (listing.buyer?.id === me) return "Bought";
+    if (listing.seller?.id === me) return "Sold";
+    return "";
+  };
+
   return (
     <div className="flex-1 flex items-stretch overflow-hidden">
       <main className="flex-1 overflow-y-auto">
         <div className="pt-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className="flex justify-between text-2xl font-bold text-gray-900 dark:text-gray-200">
-            Activity
+          <div className="flex justify-between">
+            <h1 className="flex text-2xl font-bold text-gray-900 dark:text-gray-200">
+              {title}
+            </h1>
             <section aria-labelledby="filter-heading">
               <h2 id="filter-heading" className="sr-only">
                 Product filters
@@ -143,12 +161,20 @@ const Listings = ({
                 </Menu>
               </div>
             </section>
-          </h1>
+          </div>
 
           <div className="mt-4 hidden lg:block">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50 dark:bg-gray-500 sticky top-0">
                 <tr>
+                  {includeStatus && (
+                    <th
+                      scope="col"
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                    >
+                      Status
+                    </th>
+                  )}
                   <th
                     scope="col"
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
@@ -244,6 +270,11 @@ const Listings = ({
                           : "bg-gray-50 dark:bg-gray-300"
                       }
                     >
+                      {includeStatus && (
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-700">
+                          {getListingStatus(listing)}
+                        </td>
+                      )}
                       <td className="flex items-center px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-700">
                         {metadata?.metadata ? (
                           <ImageWrapper
@@ -388,6 +419,13 @@ const Listings = ({
                                 </span>
                               </span>
                             </span>
+                            {includeStatus ? (
+                              getListingStatus(listing) === "Sold" ? (
+                                <ShoppingCartIcon className="flex-shrink-0 h-5 w-5 text-gray-600" />
+                              ) : (
+                                <CurrencyDollarIcon className="flex-shrink-0 h-5 w-5 text-gray-600" />
+                              )
+                            ) : null}
                             {open ? (
                               <ChevronDownIcon
                                 className="flex-shrink-0 h-5 w-5 text-gray-400"

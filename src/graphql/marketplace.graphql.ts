@@ -21,14 +21,6 @@ export const getUserInventory = gql`
           ...TokenFields
         }
       }
-      sold: listings(where: { status: Sold }) {
-        id
-        quantity
-        pricePerItem
-        token {
-          ...TokenFields
-        }
-      }
       tokens(first: 1000) {
         id
         quantity
@@ -187,6 +179,18 @@ export const getActivity = gql`
       orderBy: $orderBy
       orderDirection: desc
     ) {
+      ...ListingFields
+    }
+  }
+`;
+
+export const getMyActivity = gql`
+  ${LISTING_FRAGMENT}
+  query getMyActivity($me: String) {
+    sold: listings(where: { status: Sold, seller: $me }) {
+      ...ListingFields
+    }
+    bought: listings(where: { status: Sold, buyer: $me }) {
       ...ListingFields
     }
   }
