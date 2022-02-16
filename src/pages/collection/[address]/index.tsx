@@ -684,7 +684,7 @@ const Collection = () => {
     ]
   );
   const listings = useInfiniteQuery(
-    ["listings", tokenIds],
+    ["listings", isERC1155, sortParam, tokenIds],
     ({ pageParam = 0 }) =>
       marketplace.getCollectionListings({
         erc1155Filters: {
