@@ -523,7 +523,10 @@ const Drawer = ({
                                 Royalties ({FEE * 100 + "%"})
                               </p>
                               <p>
-                                ≈ {formatNumber(parseFloat(price || "0") * FEE)}{" "}
+                                ≈{" "}
+                                {formatNumber(
+                                  parseFloat(price || "0") * FEE * +quantity
+                                )}{" "}
                                 $MAGIC
                               </p>
                             </div>
@@ -535,7 +538,9 @@ const Drawer = ({
                                 <p>
                                   ≈{" "}
                                   {formatNumber(
-                                    parseFloat(price || "0") * USER_SHARE
+                                    parseFloat(price || "0") *
+                                      USER_SHARE *
+                                      +quantity
                                   )}{" "}
                                   $MAGIC
                                 </p>
