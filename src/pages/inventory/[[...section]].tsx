@@ -15,7 +15,7 @@ import { ExclamationIcon } from "@heroicons/react/outline";
 import classNames from "clsx";
 import { bridgeworld, client, marketplace } from "../../lib/client";
 import { useQuery } from "react-query";
-import { addMonths, addWeeks, closestIndexTo } from "date-fns";
+import { addMonths, addWeeks, closestIndexTo, isAfter } from "date-fns";
 import { ethers } from "ethers";
 import {
   useApproveContract,
@@ -1047,6 +1047,13 @@ const Inventory = () => {
                               status === "Inactive" ? (
                                 <p className="text-xs text-red-500 text-[0.6rem] ml-auto whitespace-nowrap">
                                   Inactive
+                                </p>
+                              ) : isAfter(
+                                  new Date(),
+                                  new Date(Number(expires))
+                                ) ? (
+                                <p className="text-xs text-red-500 text-[0.6rem] ml-auto whitespace-nowrap">
+                                  Expired
                                 </p>
                               ) : (
                                 <p className="text-xs text-[0.6rem] ml-auto whitespace-nowrap">
