@@ -696,6 +696,7 @@ const Collection = () => {
         erc721Filters: {
           status: Status.Active,
           token_in: tokenIds,
+          quantity_gt: 0,
         },
         erc721Ordering: sortToField(sortParam),
         isERC1155,

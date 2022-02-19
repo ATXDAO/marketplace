@@ -67,7 +67,7 @@ export const getCollectionStats = gql`
       floorPrice
       totalListings
       totalVolume
-      listings(where: { status: Active }) {
+      listings(where: { status: Active, quantity_gt: 0 }) {
         token {
           floorPrice
           tokenId
@@ -99,7 +99,10 @@ export const getCollectionListings = gql`
       id
       floorPrice
       tokenId
-      listings(where: { status: Active }, orderBy: pricePerItem) {
+      listings(
+        where: { status: Active, quantity_gt: 0 }
+        orderBy: pricePerItem
+      ) {
         pricePerItem
         quantity
       }
@@ -216,7 +219,7 @@ export const getERC1155Listings = gql`
     tokens(where: { collection: $collectionId, tokenId: $tokenId }) {
       tokenId
       listings(
-        where: { status: Active }
+        where: { status: Active, quantity_gt: 0 }
         skip: $skipBy
         first: $first
         orderBy: pricePerItem
@@ -263,7 +266,7 @@ export const getTokenDetails = gql`
         id
         tokenId
         lowestPrice: listings(
-          where: { status: Active }
+          where: { status: Active, quantity_gt: 0 }
           first: 1
           orderBy: pricePerItem
           orderDirection: asc
@@ -296,7 +299,7 @@ export const getCollectionsListedTokens = gql`
   query getCollectionsListedTokens($collection: String!) {
     listings(
       first: 1000
-      where: { collection: $collection, status: Active }
+      where: { collection: $collection, status: Active, quantity_gt: 0 }
       orderBy: id
     ) {
       token {
