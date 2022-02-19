@@ -8,7 +8,9 @@ import {
   MinusSmIcon,
   PlusSmIcon,
   XIcon,
+  ViewGridIcon,
 } from "@heroicons/react/solid";
+import LargeGridIcon from "../../../components/LargeGridIcon";
 
 import { useInfiniteQuery, useQuery } from "react-query";
 import { bridgeworld, client, marketplace } from "../../../lib/client";
@@ -318,6 +320,7 @@ const Collection = () => {
     useState(false);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [floorCurrency, setFloorCurrency] = useState<"magic" | "eth">("magic");
+  const [toggleGrid, setToggleGrid] = useState(false);
   const filters = getInititalFilters(formattedSearch);
   const chainId = useChainId();
   const { ethPrice } = useMagic();
@@ -1241,7 +1244,7 @@ const Collection = () => {
                         {attributeFilterList && (
                           <button
                             type="button"
-                            className="p-2 -m-2 text-gray-400 hover:text-gray-500 lg:hidden"
+                            className="p-2 m-2 text-gray-400 hover:text-gray-500 lg:hidden"
                             onClick={() => setMobileFiltersOpen(true)}
                           >
                             <span className="sr-only">Filters</span>
@@ -1296,6 +1299,22 @@ const Collection = () => {
                         </Menu.Items>
                       </Transition>
                     </Menu>
+                    {attributeFilterList && (
+                      <button
+                        type="button"
+                        className="hidden lg:p-2 lg:m-2 lg:text-gray-400 lg:hover:text-gray-500 lg:flex"
+                        onClick={() => setToggleGrid(!toggleGrid)}
+                      >
+                        {toggleGrid ? (
+                          <LargeGridIcon aria-hidden="true" />
+                        ) : (
+                          <ViewGridIcon
+                            className="w-5 h-5"
+                            aria-hidden="true"
+                          />
+                        )}
+                      </button>
+                    )}
                   </div>
                 )}
               </section>
@@ -1316,7 +1335,9 @@ const Collection = () => {
                   <ul
                     role="list"
                     className={classNames(
-                      "grid grid-cols-2 gap-y-10 sm:grid-cols-4 gap-x-6 xl:gap-x-8",
+                      `grid grid-cols-2 gap-y-10 sm:grid-cols-4 lg:grid-cols-${
+                        toggleGrid ? 6 : 4
+                      } gap-x-6 xl:gap-x-8`,
                       {
                         "lg:grid-cols-4": attributeFilterList,
                         "lg:grid-cols-6": !attributeFilterList,
@@ -1557,7 +1578,7 @@ const Collection = () => {
                                   </span>
                                 </p>
                                 {legionStats?.summons ? (
-                                  <p className="xl:text-xs text-[0.5rem] ml-auto whitespace-nowrap">
+                                  <p className="xl:text-[0.6rem] text-[0.5rem] ml-auto whitespace-nowrap">
                                     <span className="text-gray-500 dark:text-gray-400">
                                       Summoned:
                                     </span>{" "}
