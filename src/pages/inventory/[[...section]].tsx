@@ -432,9 +432,19 @@ const Drawer = ({
                                   onChange={setQuantity}
                                   disabled={isFormDisabled}
                                 >
-                                  <Listbox.Label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                    Quantity
-                                  </Listbox.Label>
+                                  <div className="flex justify-between text-sm font-medium">
+                                    <Listbox.Label className="text-gray-700 dark:text-gray-300">
+                                      Quantity
+                                    </Listbox.Label>
+                                    <button
+                                      className="text-gray-500 dark:text-gray-400 transition-colors duration-300 motion-reduce:transition-none hover:text-red-500"
+                                      onClick={() =>
+                                        setQuantity(Number(nft.total ?? 0))
+                                      }
+                                    >
+                                      Max
+                                    </button>
+                                  </div>
                                   <div className="mt-1 relative">
                                     <Listbox.Button className="bg-white relative w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:disabled:bg-gray-500 rounded-md shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500 dark:focus:ring-gray-300 dark:focus:border-gray-300 sm:text-sm disabled:text-gray-300 disabled:cursor-not-allowed transition-text ease-linear duration-300">
                                       <span className="block truncate">
