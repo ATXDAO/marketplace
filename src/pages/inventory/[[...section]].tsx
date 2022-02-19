@@ -1112,37 +1112,37 @@ const Inventory = () => {
                               )}
                           </div>
                           {expires &&
-                            quantity &&
-                            token.collection.standard ===
-                              TokenStandard.ERC1155 && (
-                              <div
-                                className={classNames(
-                                  "flex mt-1",
-                                  listedQuantity
-                                    ? "justify-between"
-                                    : "justify-end"
-                                )}
-                              >
+                          quantity &&
+                          token.collection.standard ===
+                            TokenStandard.ERC1155 ? (
+                            <div
+                              className={classNames(
+                                "flex mt-1",
+                                listedQuantity
+                                  ? "justify-between"
+                                  : "justify-end"
+                              )}
+                            >
+                              <span className="text-gray-600 text-xs text-[0.6rem]">
+                                <span className="text-gray-500 dark:text-gray-400">
+                                  Quantity:
+                                </span>{" "}
+                                <span className="font-bold text-gray-700 dark:text-gray-300">
+                                  {quantity}
+                                </span>
+                              </span>
+                              {listedQuantity ? (
                                 <span className="text-gray-600 text-xs text-[0.6rem]">
                                   <span className="text-gray-500 dark:text-gray-400">
-                                    Quantity:
+                                    Listed:
                                   </span>{" "}
                                   <span className="font-bold text-gray-700 dark:text-gray-300">
-                                    {quantity}
+                                    {listedQuantity}
                                   </span>
                                 </span>
-                                {listedQuantity && (
-                                  <span className="text-gray-600 text-xs text-[0.6rem]">
-                                    <span className="text-gray-500 dark:text-gray-400">
-                                      Listed:
-                                    </span>{" "}
-                                    <span className="font-bold text-gray-700 dark:text-gray-300">
-                                      {listedQuantity}
-                                    </span>
-                                  </span>
-                                )}
-                              </div>
-                            )}
+                              ) : null}
+                            </div>
+                          ) : null}
                         </li>
                       );
                     })}
