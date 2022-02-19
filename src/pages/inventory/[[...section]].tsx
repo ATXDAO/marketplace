@@ -64,6 +64,12 @@ type InventoryToken = {
   };
 };
 
+type PriceToFloor =
+  | { status: "not-set" }
+  | { status: "exact" }
+  | { status: "above"; value: number }
+  | { status: "below"; value: number };
+
 const dates = [
   { id: 1, label: "1 Week", value: addWeeks(new Date(), 1) },
   { id: 2, label: "2 Weeks", value: addWeeks(new Date(), 2) },
@@ -127,7 +133,9 @@ const Drawer = ({
         ]
       : dates[3]
   );
-  const [priceBelowFloorWarning, setPriceBelowFloorWarning] = useState(false);
+  const [priceToFloor, setPriceToFloor] = useState<PriceToFloor>({
+    status: "not-set",
+  });
   const [showDrawer, toggleDrawer] = useReducer((value) => !value, true);
   const [showModal, setShowModal] = useState(false);
 
@@ -189,9 +197,16 @@ const Drawer = ({
   ]);
 
   useEffect(() => {
-    const warning = !!price && Number(price) < floorThreshold;
+    const difference = floorThreshold - Number(price || "0");
+    const percentage = difference / floorThreshold;
 
-    setPriceBelowFloorWarning(warning);
+    setPriceToFloor(
+      price
+        ? difference === 0
+          ? { status: "exact" }
+          : { status: difference > 0 ? "below" : "above", value: percentage }
+        : { status: "not-set" }
+    );
   }, [floorThreshold, price]);
 
   return (
@@ -314,7 +329,10 @@ const Drawer = ({
                                     (event.target as HTMLInputElement).blur()
                                   }
                                   onBlur={() => {
-                                    if (priceBelowFloorWarning) {
+                                    if (
+                                      priceToFloor.status === "below" &&
+                                      priceToFloor.value >= 0.1
+                                    ) {
                                       setShowModal(true);
                                     }
                                   }}
@@ -342,7 +360,7 @@ const Drawer = ({
                                 </div>
                               </div>
                               <p className="flex text-red-600 text-[0.75rem] mt-1 h-[1rem]">
-                                {priceBelowFloorWarning &&
+                                {priceToFloor.status === "below" &&
                                   `Price is below floor of ${floorThreshold} $MAGIC`}
                               </p>
                             </div>
