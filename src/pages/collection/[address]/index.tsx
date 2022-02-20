@@ -13,7 +13,12 @@ import {
 import LargeGridIcon from "../../../components/LargeGridIcon";
 
 import { useInfiniteQuery, useQuery } from "react-query";
-import { bridgeworld, client, marketplace } from "../../../lib/client";
+import {
+  bridgeworld,
+  client,
+  marketplace,
+  smolverse,
+} from "../../../lib/client";
 import { AddressZero, Zero } from "@ethersproject/constants";
 import { CenterLoadingDots } from "../../../components/CenterLoadingDots";
 import {
@@ -47,7 +52,7 @@ import { useChainId } from "../../../lib/hooks";
 import { EthIcon, MagicIcon, SwapIcon } from "../../../components/Icons";
 import { useMagic } from "../../../context/magicContext";
 import { ChainId } from "@usedapp/core";
-import { BridgeworldItems } from "../../../const";
+import { BridgeworldItems, smolverseItems } from "../../../const";
 import * as Popover from "@radix-ui/react-popover";
 import { normalizeBridgeworldTokenMetadata } from "../../../utils/metadata";
 
@@ -333,12 +338,11 @@ const Collection = () => {
 
   const formattedTab = tab ? (Array.isArray(tab) ? tab[0] : tab) : "collection";
 
-  const collectionName = getCollectionNameFromAddress(
-    formattedAddress,
-    chainId
-  );
+  const collectionName =
+    getCollectionNameFromAddress(formattedAddress, chainId) ?? "";
 
-  const isBridgeworldItem = BridgeworldItems.includes(collectionName ?? "");
+  const isBridgeworldItem = BridgeworldItems.includes(collectionName);
+  const isSmolverseItem = smolverseItems.includes(collectionName);
   const isTreasure = collectionName === "Treasures";
 
   // This is a faux collection with only recruits. Which are not sellable. Redirect to Legion Auxiliary collection.
@@ -406,16 +410,16 @@ const Collection = () => {
           Category: CATEGORY.map((value) => ({ value, percentage: null })),
           Tier: TIERS.map((value) => ({ value, percentage: null })),
         };
-      case collectionName?.startsWith("Legion"):
+      case collectionName.startsWith("Legion"):
         return {
-          Role: (collectionName?.includes("Genesis") ? ROLES : AUX_ROLES).map(
+          Role: (collectionName.includes("Genesis") ? ROLES : AUX_ROLES).map(
             (value) => ({ value, percentage: null })
           ),
-          Rarity: (collectionName?.includes("Genesis")
+          Rarity: (collectionName.includes("Genesis")
             ? RARITY
             : AUX_RARITY
           ).map((value) => ({ value, percentage: null })),
-          "Summon Fatigue": (collectionName?.includes("Genesis")
+          "Summon Fatigue": (collectionName.includes("Genesis")
             ? []
             : FATIGUE
           ).map((value) => ({
@@ -513,7 +517,8 @@ const Collection = () => {
       enabled:
         Boolean(listedTokens.data) &&
         attributeIds.length > 0 &&
-        !isBridgeworldItem,
+        !isBridgeworldItem &&
+        !isSmolverseItem,
       select: React.useCallback(
         ({
           metadataAttributes,
@@ -713,11 +718,11 @@ const Collection = () => {
     }
   );
 
-  const smolMetadata = useQuery(
+  const legacyMetadata = useQuery(
     ["metadata", tokenIds],
     () => client.getCollectionMetadata({ ids: tokenIds ?? [] }),
     {
-      enabled: !!tokenIds && !isBridgeworldItem,
+      enabled: !!tokenIds && !isBridgeworldItem && !isSmolverseItem,
       refetchInterval: false,
       keepPreviousData: true,
     }
@@ -733,12 +738,30 @@ const Collection = () => {
     }
   );
 
+  const smolverseMetadata = useQuery(
+    ["sv-metadata", tokenIds],
+    () => smolverse.getSmolverseMetadata({ ids: tokenIds ?? [] }),
+    {
+      enabled: !!tokenIds && isSmolverseItem,
+      refetchInterval: false,
+      keepPreviousData: true,
+    }
+  );
+
   const isLoading = React.useMemo(
     () =>
-      [listings.status, smolMetadata.status, bridgeworldMetadata.status].every(
-        (status) => ["idle", "loading"].includes(status)
-      ),
-    [listings.status, smolMetadata.status, bridgeworldMetadata.status]
+      [
+        listings.status,
+        legacyMetadata.status,
+        bridgeworldMetadata.status,
+        smolverseMetadata.status,
+      ].every((status) => ["idle", "loading"].includes(status)),
+    [
+      listings.status,
+      legacyMetadata.status,
+      bridgeworldMetadata.status,
+      smolverseMetadata.status,
+    ]
   );
 
   // reset searchParams on address change
@@ -1352,12 +1375,17 @@ const Collection = () => {
                           ?.filter((token) => Boolean(token?.listings?.length))
                           .map((token) => {
                             const erc1155Metadata =
-                              smolMetadata.data?.tokens?.find(
+                              legacyMetadata.data?.tokens?.find(
                                 (metadata) => metadata.tokenId === token.tokenId
                               );
 
                             const legionsMetadata =
                               bridgeworldMetadata.data?.tokens.find(
+                                (item) => item.id === token.id
+                              );
+
+                            const svMetadata =
+                              smolverseMetadata.data?.tokens.find(
                                 (item) => item.id === token.id
                               );
 
@@ -1371,6 +1399,17 @@ const Collection = () => {
                                       image: legionsMetadata.image,
                                       name: legionsMetadata.name,
                                       description: "Consumables",
+                                    },
+                                  }
+                                : isSmolverseItem && svMetadata
+                                ? {
+                                    id: svMetadata.id,
+                                    name: svMetadata.name,
+                                    tokenId: token.tokenId,
+                                    metadata: {
+                                      image: svMetadata.image ?? "",
+                                      name: svMetadata.name,
+                                      description: collectionName,
                                     },
                                   }
                                 : erc1155Metadata;
@@ -1432,7 +1471,7 @@ const Collection = () => {
                               (item) => item.id === listing.token.id
                             );
                           const erc721Metadata =
-                            smolMetadata.data?.tokens?.find(
+                            legacyMetadata.data?.tokens?.find(
                               (item) => item.tokenId === listing.token.tokenId
                             );
 
@@ -1447,7 +1486,7 @@ const Collection = () => {
                             "LegionInfo"
                               ? {
                                   summons: legionsMetadata.metadata.summons,
-                                  summonTotal: collectionName?.includes(
+                                  summonTotal: collectionName.includes(
                                     "Genesis"
                                   )
                                     ? "Unlimited"

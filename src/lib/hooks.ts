@@ -111,27 +111,31 @@ export const collections: Collections = {
     },
     {
       name: "Smol Bodies",
-      address: AddressZero,
+      address: "0x11ff50aa78dad7f559b997fd008722a125105f07",
     },
     {
       name: "Smol Bodies Pets",
-      address: AddressZero,
+      address: "0x5b5d6709170aa4d36a0661015b495d19875acb14",
     },
     {
       name: "Smol Brains",
-      address: "0x4feea06250d9f315a6a454c9c8a7fcbcf8701210",
+      address: "0x2542421aca04a98f5cf04da97a36dad8f1fac3f4",
     },
     {
       name: "Smol Brains Land",
-      address: AddressZero,
+      address: "0xf8e004f5447a3d9ae0841fac98523fa89c1ea63d",
     },
     {
       name: "Smol Brains Pets",
-      address: AddressZero,
+      address: "0xb13177402caaffb4355247ab35490bb13ea63964",
+    },
+    {
+      name: "Smol Treasures",
+      address: "0x8e79c8607a28fe1ec3527991c89f1d9e36d1bad9",
     },
     {
       name: "Treasures",
-      address: "0x6333F38F98f5c46dA6F873aCbF25DCf8748DDc2c",
+      address: "0x6333f38f98f5c46da6f873acbf25dcf8748ddc2c",
     },
     {
       name: "Smol Cars",
@@ -195,6 +199,10 @@ export const collections: Collections = {
     {
       name: "Smol Cars",
       address: "0xb16966dad2b5a5282b99846b23dcdf8c47b6132c",
+    },
+    {
+      name: "Smol Treasures",
+      address: "0xc5295c6a183f29b7c962df076819d44e0076860e",
     },
     {
       name: "Treasures",

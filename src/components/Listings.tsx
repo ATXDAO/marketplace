@@ -5,7 +5,7 @@ import {
   ShoppingCartIcon,
 } from "@heroicons/react/solid";
 import { CurrencyDollarIcon } from "@heroicons/react/outline";
-import { FC, Fragment } from "react";
+import { FC, Fragment, useMemo } from "react";
 import { ListingFieldsFragment } from "../../generated/marketplace.graphql";
 import { Menu, Transition } from "@headlessui/react";
 import { formatDistanceToNow } from "date-fns";
@@ -24,8 +24,8 @@ import classNames from "clsx";
 import { Disclosure } from "@headlessui/react";
 import Link from "next/link";
 import { useQuery } from "react-query";
-import { bridgeworld, client } from "../lib/client";
-import { BridgeworldItems } from "../const";
+import { bridgeworld, client, smolverse } from "../lib/client";
+import { BridgeworldItems, smolverseItems } from "../const";
 
 const sortOptions = [
   { name: "Highest Price", value: "price" },
@@ -49,29 +49,33 @@ const Listings: FC<ListingProps> = ({
   const chainId = useChainId();
   const { account } = useEthers();
 
-  const tokens = listings
-    .filter(
-      (listing) =>
-        !BridgeworldItems.includes(
-          getCollectionNameFromAddress(listing.collection.id, chainId) || ""
-        )
-    )
-    .map((listing) => listing.token.id);
+  const { tokens, bridgeworldTokens, smolverseTokens } = useMemo(() => {
+    return listings.reduce(
+      (acc, { collection, token }) => {
+        const collectionName =
+          getCollectionNameFromAddress(collection.id, chainId) ?? "";
 
-  const bridgeworldTokens = listings
-    .filter((listing) =>
-      BridgeworldItems.includes(
-        getCollectionNameFromAddress(listing.collection.id, chainId) || ""
-      )
-    )
-    .map((listing) => listing.token.id);
+        if (BridgeworldItems.includes(collectionName)) {
+          acc.bridgeworldTokens.push(token.id);
+        } else if (smolverseItems.includes(collectionName)) {
+          acc.smolverseTokens.push(token.id);
+        } else {
+          acc.tokens.push(token.id);
+        }
+
+        return acc;
+      },
+      {
+        tokens: [] as string[],
+        bridgeworldTokens: [] as string[],
+        smolverseTokens: [] as string[],
+      }
+    );
+  }, [chainId, listings]);
 
   const { data: metadataData } = useQuery(
     ["activity-metadata", tokens],
-    () =>
-      client.getTokensMetadata({
-        ids: tokens,
-      }),
+    () => client.getTokensMetadata({ ids: tokens }),
     {
       enabled: tokens.length > 0,
       refetchInterval: false,
@@ -83,6 +87,15 @@ const Listings: FC<ListingProps> = ({
     () => bridgeworld.getBridgeworldMetadata({ ids: bridgeworldTokens }),
     {
       enabled: bridgeworldTokens.length > 0,
+      refetchInterval: false,
+    }
+  );
+
+  const { data: smolverseMetadata } = useQuery(
+    ["activity-metadata-smolverse", smolverseTokens],
+    () => smolverse.getSmolverseMetadata({ ids: smolverseTokens }),
+    {
+      enabled: smolverseTokens.length > 0,
       refetchInterval: false,
     }
   );
@@ -229,6 +242,9 @@ const Listings: FC<ListingProps> = ({
                   const legacyMetadata = metadataData?.tokens.find(
                     (item) => item?.id === listing.token.id
                   );
+                  const svMetadata = smolverseMetadata?.tokens.find(
+                    (item) => item?.id === listing.token.id
+                  );
                   const metadata = legionsMetadata
                     ? {
                         id: legionsMetadata.id,
@@ -238,6 +254,17 @@ const Listings: FC<ListingProps> = ({
                           image: legionsMetadata.image,
                           name: legionsMetadata.name,
                           description: collectionName ?? "Legions",
+                        },
+                      }
+                    : svMetadata
+                    ? {
+                        id: svMetadata.id,
+                        name: svMetadata.name,
+                        tokenId: listing.token.tokenId,
+                        metadata: {
+                          image: svMetadata.image ?? "",
+                          name: svMetadata.name,
+                          description: collectionName ?? "",
                         },
                       }
                     : getPetsMetadata({

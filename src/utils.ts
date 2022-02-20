@@ -15,7 +15,9 @@ function toFixed(num: number, fixed: number) {
 }
 
 export const generateIpfsLink = (hash: string) => {
-  const removedIpfs = hash.substring(7);
+  const removedIpfs = hash.startsWith("ipfs:")
+    ? hash.substring(7)
+    : hash.replace("https://gateway.pinata.cloud/ipfs/", "");
 
   return `https://ipfs.io/ipfs/${removedIpfs}`;
 };

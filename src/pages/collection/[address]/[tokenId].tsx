@@ -22,7 +22,12 @@ import {
 import Link from "next/link";
 import { useInfiniteQuery, useQuery, useQueryClient } from "react-query";
 import { useRouter } from "next/router";
-import { bridgeworld, client, marketplace } from "../../../lib/client";
+import {
+  bridgeworld,
+  client,
+  marketplace,
+  smolverse,
+} from "../../../lib/client";
 import { AddressZero } from "@ethersproject/constants";
 import {
   useApproveMagic,
@@ -54,8 +59,8 @@ import { formatEther } from "ethers/lib/utils";
 import Button from "../../../components/Button";
 import { Modal } from "../../../components/Modal";
 import { BigNumber } from "@ethersproject/bignumber";
-import { BridgeworldItems, Contracts } from "../../../const";
-import { BridgeworldToken, targetNftT } from "../../../types";
+import { BridgeworldItems, Contracts, smolverseItems } from "../../../const";
+import { targetNftT } from "../../../types";
 import { Tooltip } from "../../../components/Tooltip";
 import { utils } from "ethers";
 import { EthIcon, SwapIcon, UsdIcon } from "../../../components/Icons";
@@ -233,13 +238,15 @@ export default function Example() {
   const collectionName =
     getCollectionNameFromAddress(formattedAddress, chainId) ?? "";
   const isBridgeworldItem = BridgeworldItems.includes(collectionName);
+  const isSmolverseItem = smolverseItems.includes(collectionName);
   const isTreasure = collectionName === "Treasures";
 
   const { data: metadataData, isLoading: metadataLoading } = useQuery(
     ["details-metadata", id],
     () => client.getTokenMetadata({ id }),
     {
-      enabled: Boolean(id) && !isBridgeworldItem && !isTreasure,
+      enabled:
+        Boolean(id) && !isBridgeworldItem && !isTreasure && !isSmolverseItem,
       refetchInterval: false,
     }
   );
@@ -255,7 +262,19 @@ export default function Example() {
       refetchInterval: false,
     }
   );
+
+  const { data: smolverseMetadataData, isLoading: smolverseMetadataLoading } =
+    useQuery(
+      ["details-metadata-smolverse", id],
+      () => smolverse.getSmolverseMetadata({ ids: [id] }),
+      {
+        enabled: Boolean(id) && isSmolverseItem,
+        refetchInterval: false,
+      }
+    );
+
   const bridgeworldMetadata = BridgeworldMetadataData?.tokens?.[0] ?? null;
+  const smolverseMetadata = smolverseMetadataData?.tokens?.[0] ?? null;
   const legacyMetadata = metadataData?.token ?? null;
 
   const petsMetadata = getPetsMetadata({
@@ -264,19 +283,25 @@ export default function Example() {
   } as any);
   const metadata = bridgeworldMetadata
     ? normalizeBridgeworldTokenMetadata(bridgeworldMetadata)
+    : smolverseMetadata
+    ? {
+        id: smolverseMetadata.id,
+        description: collectionName,
+        image: smolverseMetadata.image,
+        name: smolverseMetadata.name,
+      }
     : legacyMetadata?.metadata
     ? {
         ...legacyMetadata.metadata,
-        description: legacyMetadata.metadata.description.replace(
-          "Legion",
-          "Legacy Legion"
-        ),
+        description: legacyMetadata.metadata.description,
       }
     : (petsMetadata?.metadata as any) ?? null;
 
   const allMetadataLoaded =
     isBridgeworldItem || isTreasure
       ? !bridgeworldMetadataLoading && bridgeworldMetadata
+      : isSmolverseItem
+      ? !smolverseMetadataLoading && smolverseMetadata
       : !metadataLoading && metadataData;
 
   const loading = isLoading || isIdle || !allMetadataLoaded;

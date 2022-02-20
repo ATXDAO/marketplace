@@ -24,3 +24,10 @@ generates:
       - "typescript"
       - "typescript-operations"
       - "typescript-graphql-request"
+  generated/smolverse.graphql.ts:
+    schema: ${NEXT_PUBLIC_SMOLVERSE_SUBGRAPH}
+    documents: "src/graphql/smolverse.graphql.ts"
+    plugins:
+      - "typescript"
+      - "typescript-operations"
+      - "typescript-graphql-request"

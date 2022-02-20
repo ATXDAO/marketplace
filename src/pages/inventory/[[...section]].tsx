@@ -13,7 +13,7 @@ import { XIcon } from "@heroicons/react/outline";
 import { SelectorIcon, CheckIcon } from "@heroicons/react/solid";
 import { ExclamationIcon } from "@heroicons/react/outline";
 import classNames from "clsx";
-import { bridgeworld, client, marketplace } from "../../lib/client";
+import { bridgeworld, client, marketplace, smolverse } from "../../lib/client";
 import { useQuery } from "react-query";
 import { addMonths, addWeeks, closestIndexTo, isAfter } from "date-fns";
 import { ethers } from "ethers";
@@ -41,7 +41,7 @@ import Link from "next/link";
 import { CenterLoadingDots } from "../../components/CenterLoadingDots";
 import { formatEther } from "ethers/lib/utils";
 import { formatDistanceToNow } from "date-fns";
-import { BridgeworldItems, FEE, USER_SHARE } from "../../const";
+import { BridgeworldItems, FEE, smolverseItems, USER_SHARE } from "../../const";
 import { TokenStandard } from "../../../generated/queries.graphql";
 import { useMagic } from "../../context/magicContext";
 import Listings from "../../components/Listings";
@@ -800,22 +800,29 @@ const Inventory = () => {
     }
   }, [inventory.data?.user, section]);
 
-  const tokens = (data as InventoryToken[])
-    .filter(
-      ({ token }) =>
-        !BridgeworldItems.includes(
-          getCollectionNameFromAddress(token.collection.id, chainId) || ""
-        )
-    )
-    .map(({ token }) => token.id);
+  const { tokens, bridgeworldTokens, smolverseTokens } = useMemo(() => {
+    return (data as InventoryToken[]).reduce(
+      (acc, { token }) => {
+        const collectionName =
+          getCollectionNameFromAddress(token.collection.id, chainId) ?? "";
 
-  const bridgeworldTokens = (data as InventoryToken[])
-    .filter(({ token }) =>
-      BridgeworldItems.includes(
-        getCollectionNameFromAddress(token.collection.id, chainId) || ""
-      )
-    )
-    .map(({ token }) => token.id);
+        if (BridgeworldItems.includes(collectionName)) {
+          acc.bridgeworldTokens.push(token.id);
+        } else if (smolverseItems.includes(collectionName)) {
+          acc.smolverseTokens.push(token.id);
+        } else {
+          acc.tokens.push(token.id);
+        }
+
+        return acc;
+      },
+      {
+        tokens: [] as string[],
+        bridgeworldTokens: [] as string[],
+        smolverseTokens: [] as string[],
+      }
+    );
+  }, [chainId, data]);
 
   const { data: metadataData } = useQuery(
     ["inventory-metadata", tokens],
@@ -831,6 +838,15 @@ const Inventory = () => {
     () => bridgeworld.getBridgeworldMetadata({ ids: bridgeworldTokens }),
     {
       enabled: bridgeworldTokens.length > 0,
+      refetchInterval: false,
+    }
+  );
+
+  const { data: smolverseMetadata } = useQuery(
+    ["inventory-metadata-smolverse", smolverseTokens],
+    () => smolverse.getSmolverseMetadata({ ids: smolverseTokens }),
+    {
+      enabled: smolverseTokens.length > 0,
       refetchInterval: false,
     }
   );
@@ -947,6 +963,9 @@ const Inventory = () => {
                       const bwMetadata = bridgeworldMetadata?.tokens.find(
                         (item) => item.id === token.id
                       );
+                      const smolMetadata = smolverseMetadata?.tokens.find(
+                        (item) => item.id === token.id
+                      );
                       const metadata = bwMetadata
                         ? {
                             id: bwMetadata.id,
@@ -955,6 +974,17 @@ const Inventory = () => {
                             metadata: {
                               image: bwMetadata.image,
                               name: bwMetadata.name,
+                              description: token.collection.name,
+                            },
+                          }
+                        : smolMetadata
+                        ? {
+                            id: smolMetadata.id,
+                            name: smolMetadata.name,
+                            tokenId: smolMetadata.tokenId,
+                            metadata: {
+                              image: smolMetadata.image ?? "",
+                              name: smolMetadata.name,
                               description: token.collection.name,
                             },
                           }
