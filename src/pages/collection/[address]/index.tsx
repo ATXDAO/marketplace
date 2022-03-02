@@ -49,7 +49,11 @@ import Button from "../../../components/Button";
 import { useCollection } from "../../../lib/hooks";
 import { EthIcon, MagicIcon, SwapIcon } from "../../../components/Icons";
 import { useMagic } from "../../../context/magicContext";
-import { BridgeworldItems, smolverseItems } from "../../../const";
+import {
+  BATTLEFLY_METADATA,
+  BridgeworldItems,
+  smolverseItems,
+} from "../../../const";
 import * as Popover from "@radix-ui/react-popover";
 import { normalizeBridgeworldTokenMetadata } from "../../../utils/metadata";
 
@@ -751,7 +755,10 @@ const Collection = () => {
                 16
               )}/metadata`
             ).then((res) => res.json()),
-          select: (data) => ({ id, ...data }),
+          select: (data) =>
+            data.status === 404
+              ? BATTLEFLY_METADATA.battleflies
+              : { id, ...data },
           refetchInterval: false as const,
         })) ?? []
       : []
@@ -768,7 +775,8 @@ const Collection = () => {
                 16
               )}/metadata`
             ).then((res) => res.json()),
-          select: (data) => ({ id, ...data }),
+          select: (data) =>
+            data.status === 404 ? BATTLEFLY_METADATA.specials : { id, ...data },
           refetchInterval: false as const,
         })) ?? []
       : []

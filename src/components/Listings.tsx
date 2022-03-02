@@ -24,7 +24,7 @@ import { Disclosure } from "@headlessui/react";
 import Link from "next/link";
 import { useQueries, useQuery } from "react-query";
 import { bridgeworld, client, smolverse } from "../lib/client";
-import { BridgeworldItems, smolverseItems } from "../const";
+import { BATTLEFLY_METADATA, BridgeworldItems, smolverseItems } from "../const";
 
 const sortOptions = [
   { name: "Highest Price", value: "price" },
@@ -123,7 +123,8 @@ const Listings: FC<ListingProps> = ({
             16
           )}/metadata`
         ).then((res) => res.json()),
-      select: (data) => ({ id, ...data }),
+      select: (data) =>
+        data.status === 404 ? BATTLEFLY_METADATA.battleflies : { id, ...data },
       refetchInterval: false as const,
     }))
   );
@@ -138,7 +139,8 @@ const Listings: FC<ListingProps> = ({
             16
           )}/metadata`
         ).then((res) => res.json()),
-      select: (data) => ({ id, ...data }),
+      select: (data) =>
+        data.status === 404 ? BATTLEFLY_METADATA.specials : { id, ...data },
       refetchInterval: false as const,
     }))
   );

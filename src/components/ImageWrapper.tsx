@@ -29,7 +29,7 @@ export default function ImageWrapper({
           ? generateIpfsLink(
               "ipfs://QmUcEoYHwye65tsncGAtoz2bQLjQtrE2GiCa6L1PYNcbh7/0.png"
             )
-          : token.metadata?.image?.includes("ipfs")
+          : token.metadata?.image.includes("ipfs")
           ? generateIpfsLink(token.metadata.image)
           : token.metadata?.image ?? "")
       }

@@ -32,3 +32,34 @@ export const smolverseItems = ["Smol Treasures"];
 
 export const FEE = 0.05;
 export const USER_SHARE = 1 - FEE;
+
+export const BATTLEFLY_METADATA = {
+  battleflies: {
+    name: "Cocoon",
+    description: "Ordinary cocoon, what's inside?",
+    image:
+      "https://ipfs.infura.io/ipfs/QmecUwQADn2yd2tNBoVvWLuknYMxY8WLnWVfATHG452VJP",
+    attributes: [
+      {
+        attribute: {
+          trait_type: "Type",
+          value: "Genesis",
+        },
+      },
+      {
+        attribute: {
+          trait_type: "Class",
+          value: "Edition",
+        },
+      },
+    ],
+  },
+  specials: {
+    name: "v1 Founder",
+    description:
+      "BattleFly v1 Founders NFT represents ownership of the BattleFly Game. There is only 220 NFT in circulation.",
+    image:
+      "https://ipfs.infura.io/ipfs/QmXsiziZsoYEz5sqz7rHCYdtuqaBPrpQbn7UnuUpcf2n6Z",
+    attributes: [],
+  },
+};

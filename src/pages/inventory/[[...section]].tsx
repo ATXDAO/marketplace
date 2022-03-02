@@ -19,7 +19,6 @@ import { addMonths, addWeeks, closestIndexTo, isAfter } from "date-fns";
 import { ethers } from "ethers";
 import {
   useApproveContract,
-  useChainId,
   useCollections,
   useContractApprovals,
   useCreateListing,
@@ -28,13 +27,7 @@ import {
 } from "../../lib/hooks";
 import { useEthers } from "@usedapp/core";
 import { AddressZero } from "@ethersproject/constants";
-import {
-  formatNumber,
-  generateIpfsLink,
-  // getCollectionNameFromAddress,
-  // getCollectionSlugFromName,
-  getPetsMetadata,
-} from "../../utils";
+import { formatNumber, generateIpfsLink, getPetsMetadata } from "../../utils";
 import { useRouter } from "next/router";
 import Button from "../../components/Button";
 import ImageWrapper from "../../components/ImageWrapper";
@@ -42,7 +35,13 @@ import Link from "next/link";
 import { CenterLoadingDots } from "../../components/CenterLoadingDots";
 import { formatEther } from "ethers/lib/utils";
 import { formatDistanceToNow } from "date-fns";
-import { BridgeworldItems, FEE, smolverseItems, USER_SHARE } from "../../const";
+import {
+  BATTLEFLY_METADATA,
+  BridgeworldItems,
+  FEE,
+  smolverseItems,
+  USER_SHARE,
+} from "../../const";
 import { TokenStandard } from "../../../generated/queries.graphql";
 import { useMagic } from "../../context/magicContext";
 import Listings from "../../components/Listings";
@@ -688,7 +687,6 @@ const Drawer = ({
 
 const Inventory = () => {
   const router = useRouter();
-  const chainId = useChainId();
   const [nft, setNft] = useState<Nft | null>(null);
   const { account } = useEthers();
   const [section] = router.query.section ?? [""];
@@ -877,7 +875,8 @@ const Inventory = () => {
             16
           )}/metadata`
         ).then((res) => res.json()),
-      select: (data) => ({ id, ...data }),
+      select: (data) =>
+        data.status === 404 ? BATTLEFLY_METADATA.battleflies : { id, ...data },
       refetchInterval: false as const,
     }))
   );
@@ -892,7 +891,8 @@ const Inventory = () => {
             16
           )}/metadata`
         ).then((res) => res.json()),
-      select: (data) => ({ id, ...data }),
+      select: (data) =>
+        data.status === 404 ? BATTLEFLY_METADATA.specials : { id, ...data },
       refetchInterval: false as const,
     }))
   );

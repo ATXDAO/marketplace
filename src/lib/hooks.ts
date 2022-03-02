@@ -9,7 +9,12 @@ import {
   useEthers,
 } from "@usedapp/core";
 import { BigNumber, Contract } from "ethers";
-import { BridgeworldItems, Contracts, smolverseItems } from "../const";
+import {
+  BATTLEFLY_METADATA,
+  BridgeworldItems,
+  Contracts,
+  smolverseItems,
+} from "../const";
 import { Interface } from "@ethersproject/abi";
 import { generateIpfsLink, getPetsMetadata } from "../utils";
 import { toast } from "react-hot-toast";
@@ -555,10 +560,16 @@ export function useMetadata(
       enabled: !!id && isBattleflyItem,
       refetchInterval: false,
       keepPreviousData: true,
-      select: (data) => ({
-        ...data,
-        attributes: data.attributes.map((attribute) => ({ attribute })),
-      }),
+      select: useCallback(
+        (data) =>
+          data.status === 404
+            ? BATTLEFLY_METADATA.battleflies
+            : {
+                ...data,
+                attributes: data.attributes.map((attribute) => ({ attribute })),
+              },
+        []
+      ),
     }
   );
 
@@ -575,10 +586,16 @@ export function useMetadata(
       enabled: !!id && isFoundersItem,
       refetchInterval: false,
       keepPreviousData: true,
-      select: (data) => ({
-        ...data,
-        attributes: data.attributes.map((attribute) => ({ attribute })),
-      }),
+      select: useCallback(
+        (data) =>
+          data.status === 404
+            ? BATTLEFLY_METADATA.specials
+            : {
+                ...data,
+                attributes: data.attributes.map((attribute) => ({ attribute })),
+              },
+        []
+      ),
     }
   );
 
