@@ -710,6 +710,7 @@ const Collection = () => {
         last.listings?.length === MAX_ITEMS_PER_PAGE
           ? pages.length * MAX_ITEMS_PER_PAGE
           : undefined,
+      keepPreviousData: true,
       refetchInterval: false,
     }
   );
