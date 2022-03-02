@@ -14,11 +14,7 @@ import {
   getChainName,
 } from "@usedapp/core";
 import { formatEther } from "ethers/lib/utils";
-import {
-  formatNumber,
-  getCollectionNameFromAddress,
-  slugToAddress,
-} from "../utils";
+import { formatNumber } from "../utils";
 import { Modal } from "./Modal";
 import { Item } from "react-stately";
 import { SearchAutocomplete } from "./SearchAutocomplete";
@@ -33,9 +29,8 @@ import Coinbase from "../../public/img/coinbase.png";
 
 import Image from "next/image";
 import { WalletConnectConnector } from "@web3-react/walletconnect-connector";
-import { useChainId, useCollections } from "../lib/hooks";
+import { useCollections } from "../lib/hooks";
 import { getCollectionSlugFromName } from "../utils";
-import { AddressZero } from "@ethersproject/constants";
 import { WalletLinkConnector } from "@web3-react/walletlink-connector";
 
 const walletLink = new WalletLinkConnector({
@@ -63,7 +58,6 @@ const Header = () => {
     chainId: currentChainId,
   } = useEthers();
   const [isOpenWalletModal, setIsOpenWalletModal] = useState(false);
-  const chainId = useChainId();
 
   const router = useRouter();
   const { address } = router.query;
@@ -78,15 +72,8 @@ const Header = () => {
   const onClose = () => setIsOpenWalletModal(false);
 
   const data = useCollections();
-
-  const formattedAddress = Array.isArray(address)
-    ? slugToAddress(address[0], chainId)
-    : slugToAddress(address?.toLowerCase() ?? AddressZero, chainId);
-
-  const collectionName = getCollectionNameFromAddress(
-    formattedAddress,
-    chainId
-  );
+  const collectionName =
+    data.find((item) => item.address === address)?.name ?? "";
 
   const showBwWarning = [
     "Unpilgrimaged Legion Auxiliary",
@@ -238,7 +225,7 @@ const Header = () => {
                             >
                               <a
                                 className={classNames(
-                                  "flex items-center text-sm font-medium dark:hover:text-gray-200 hover:text-gray-800",
+                                  "flex gap-2 items-center text-sm font-medium dark:hover:text-gray-200 hover:text-gray-800",
                                   {
                                     "dark:text-gray-200 text-red-700": active,
                                     "dark:text-gray-500 text-gray-700": !active,
@@ -246,6 +233,11 @@ const Header = () => {
                                 )}
                               >
                                 {collection.name}
+                                {collection.name === "BattleFly" ? (
+                                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                    NEW
+                                  </span>
+                                ) : null}
                               </a>
                             </Link>
                           );
