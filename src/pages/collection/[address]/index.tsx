@@ -12,7 +12,7 @@ import {
 } from "@heroicons/react/solid";
 import LargeGridIcon from "../../../components/LargeGridIcon";
 
-import { useInfiniteQuery, useQueries, useQuery } from "react-query";
+import { useInfiniteQuery, useQuery } from "react-query";
 import {
   bridgeworld,
   client,
@@ -46,14 +46,14 @@ import { SearchAutocomplete } from "../../../components/SearchAutocomplete";
 import { Item } from "react-stately";
 import Listings from "../../../components/Listings";
 import Button from "../../../components/Button";
-import { useCollection } from "../../../lib/hooks";
+import {
+  useBattleflyMetadata,
+  useCollection,
+  useFoundersMetadata,
+} from "../../../lib/hooks";
 import { EthIcon, MagicIcon, SwapIcon } from "../../../components/Icons";
 import { useMagic } from "../../../context/magicContext";
-import {
-  BATTLEFLY_METADATA,
-  BridgeworldItems,
-  smolverseItems,
-} from "../../../const";
+import { BridgeworldItems, smolverseItems } from "../../../const";
 import * as Popover from "@radix-ui/react-popover";
 import { normalizeBridgeworldTokenMetadata } from "../../../utils/metadata";
 
@@ -745,43 +745,8 @@ const Collection = () => {
     }
   );
 
-  const battleflyMetadata = useQueries(
-    isBattleflyItem
-      ? tokenIds?.map((id) => ({
-          queryKey: ["bf-metadata", id],
-          queryFn: () =>
-            fetch(
-              `${process.env.NEXT_PUBLIC_BATTLEFLY_API}/battleflies/${parseInt(
-                id.slice(45),
-                16
-              )}/metadata`
-            ).then((res) => res.json()),
-          select: (data) =>
-            data.status === 404
-              ? BATTLEFLY_METADATA.battleflies
-              : { id, ...data },
-          refetchInterval: false as const,
-        })) ?? []
-      : []
-  );
-
-  const foundersMetadata = useQueries(
-    isFoundersItem
-      ? tokenIds?.map((id) => ({
-          queryKey: ["founders-metadata", id],
-          queryFn: () =>
-            fetch(
-              `${process.env.NEXT_PUBLIC_BATTLEFLY_API}/specials/${parseInt(
-                id.slice(45),
-                16
-              )}/metadata`
-            ).then((res) => res.json()),
-          select: (data) =>
-            data.status === 404 ? BATTLEFLY_METADATA.specials : { id, ...data },
-          refetchInterval: false as const,
-        })) ?? []
-      : []
-  );
+  const battleflyMetadata = useBattleflyMetadata(isBattleflyItem ? "1" : "");
+  const foundersMetadata = useFoundersMetadata(isFoundersItem ? "1" : "");
 
   const isLoading = React.useMemo(
     () =>
@@ -790,16 +755,16 @@ const Collection = () => {
         legacyMetadata.status,
         bridgeworldMetadata.status,
         smolverseMetadata.status,
-        ...battleflyMetadata.map((item) => item.status),
-        ...foundersMetadata.map((item) => item.status),
+        battleflyMetadata.status,
+        foundersMetadata.status,
       ].every((status) => ["idle", "loading"].includes(status)),
     [
       listings.status,
       legacyMetadata.status,
       bridgeworldMetadata.status,
       smolverseMetadata.status,
-      battleflyMetadata,
-      foundersMetadata,
+      battleflyMetadata.status,
+      foundersMetadata.status,
     ]
   );
 
@@ -1428,10 +1393,6 @@ const Collection = () => {
                                 (item) => item.id === token.id
                               );
 
-                            const bfMetadata = battleflyMetadata.find(
-                              (item) => item.data.id === token.id
-                            )?.data;
-
                             const metadata =
                               isBridgeworldItem && legionsMetadata
                                 ? {
@@ -1452,17 +1413,6 @@ const Collection = () => {
                                     metadata: {
                                       image: svMetadata.image ?? "",
                                       name: svMetadata.name,
-                                      description: collectionName,
-                                    },
-                                  }
-                                : isBattleflyItem && bfMetadata
-                                ? {
-                                    id: bfMetadata.id,
-                                    name: bfMetadata.name,
-                                    tokenId: token.tokenId,
-                                    metadata: {
-                                      image: bfMetadata.image ?? "",
-                                      name: bfMetadata.name,
                                       description: collectionName,
                                     },
                                   }
@@ -1520,12 +1470,8 @@ const Collection = () => {
                           })}
                         {/* ERC721 */}
                         {group.listings?.map((listing) => {
-                          const bfMetadata = battleflyMetadata.find(
-                            (item) => item.data?.id === listing.token.id
-                          )?.data;
-                          const fsMetadata = foundersMetadata.find(
-                            (item) => item.data?.id === listing.token.id
-                          )?.data;
+                          const bfMetadata = battleflyMetadata.data;
+                          const fsMetadata = foundersMetadata.data;
                           const legionsMetadata =
                             bridgeworldMetadata.data?.tokens.find(
                               (item) => item.id === listing.token.id
@@ -1605,7 +1551,7 @@ const Collection = () => {
                                 name: bfMetadata.name,
                                 tokenId: listing.token.tokenId,
                                 metadata: {
-                                  image: bfMetadata.image,
+                                  image: bfMetadata.image ?? "",
                                   name: bfMetadata.name,
                                   description: collectionName,
                                 },
@@ -1616,7 +1562,7 @@ const Collection = () => {
                                 name: fsMetadata.name,
                                 tokenId: listing.token.tokenId,
                                 metadata: {
-                                  image: fsMetadata.image,
+                                  image: fsMetadata.image ?? "",
                                   name: fsMetadata.name,
                                   description: collectionName,
                                 },

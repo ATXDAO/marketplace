@@ -14,7 +14,11 @@ import {
   getCollectionSlugFromName,
   getPetsMetadata,
 } from "../utils";
-import { useCollections } from "../lib/hooks";
+import {
+  useBattleflyMetadata,
+  useCollections,
+  useFoundersMetadata,
+} from "../lib/hooks";
 import { shortenAddress, useEthers } from "@usedapp/core";
 import { useRouter } from "next/router";
 import ImageWrapper from "./ImageWrapper";
@@ -22,9 +26,9 @@ import QueryLink from "./QueryLink";
 import classNames from "clsx";
 import { Disclosure } from "@headlessui/react";
 import Link from "next/link";
-import { useQueries, useQuery } from "react-query";
+import { useQuery } from "react-query";
 import { bridgeworld, client, smolverse } from "../lib/client";
-import { BATTLEFLY_METADATA, BridgeworldItems, smolverseItems } from "../const";
+import { BridgeworldItems, smolverseItems } from "../const";
 
 const sortOptions = [
   { name: "Highest Price", value: "price" },
@@ -113,37 +117,8 @@ const Listings: FC<ListingProps> = ({
     }
   );
 
-  const battleflyMetadatas = useQueries(
-    battleflyTokens.map((id) => ({
-      queryKey: ["metadata-bf", id],
-      queryFn: () =>
-        fetch(
-          `${process.env.NEXT_PUBLIC_BATTLEFLY_API}/battleflies/${parseInt(
-            id.slice(45),
-            16
-          )}/metadata`
-        ).then((res) => res.json()),
-      select: (data) =>
-        data.status === 404 ? BATTLEFLY_METADATA.battleflies : { id, ...data },
-      refetchInterval: false as const,
-    }))
-  );
-
-  const foundersMetadatas = useQueries(
-    foundersTokens.map((id) => ({
-      queryKey: ["metadata-fs", id],
-      queryFn: () =>
-        fetch(
-          `${process.env.NEXT_PUBLIC_BATTLEFLY_API}/specials/${parseInt(
-            id.slice(45),
-            16
-          )}/metadata`
-        ).then((res) => res.json()),
-      select: (data) =>
-        data.status === 404 ? BATTLEFLY_METADATA.specials : { id, ...data },
-      refetchInterval: false as const,
-    }))
-  );
+  const battleflyMetadata = useBattleflyMetadata(battleflyTokens);
+  const foundersMetadata = useFoundersMetadata(foundersTokens);
 
   const getListingStatus = (listing: ListingFieldsFragment) => {
     const me = account?.toLowerCase();
@@ -289,12 +264,12 @@ const Listings: FC<ListingProps> = ({
                   const svMetadata = smolverseMetadata?.tokens.find(
                     (item) => item?.id === listing.token.id
                   );
-                  const bfMetadata = battleflyMetadatas.find(
-                    (item) => item.data?.id === listing.token.id
-                  )?.data;
-                  const fsMetadata = foundersMetadatas.find(
-                    (item) => item.data?.id === listing.token.id
-                  )?.data;
+                  const bfMetadata = battleflyMetadata.data?.find(
+                    (item) => item.id === listing.token.id
+                  );
+                  const fsMetadata = foundersMetadata.data?.find(
+                    (item) => item.id === listing.token.id
+                  );
 
                   const metadata = legionsMetadata
                     ? {
@@ -454,12 +429,12 @@ const Listings: FC<ListingProps> = ({
               const svMetadata = smolverseMetadata?.tokens.find(
                 (item) => item?.id === listing.token.id
               );
-              const bfMetadata = battleflyMetadatas.find(
-                (item) => item.data?.id === listing.token.id
-              )?.data;
-              const fsMetadata = foundersMetadatas.find(
-                (item) => item.data?.id === listing.token.id
-              )?.data;
+              const bfMetadata = battleflyMetadata.data?.find(
+                (item) => item.id === listing.token.id
+              );
+              const fsMetadata = foundersMetadata.data?.find(
+                (item) => item.id === listing.token.id
+              );
 
               const metadata = legionsMetadata
                 ? {

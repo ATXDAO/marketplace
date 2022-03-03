@@ -14,14 +14,16 @@ import { SelectorIcon, CheckIcon } from "@heroicons/react/solid";
 import { ExclamationIcon } from "@heroicons/react/outline";
 import classNames from "clsx";
 import { bridgeworld, client, marketplace, smolverse } from "../../lib/client";
-import { useQueries, useQuery } from "react-query";
+import { useQuery } from "react-query";
 import { addMonths, addWeeks, closestIndexTo, isAfter } from "date-fns";
 import { ethers } from "ethers";
 import {
   useApproveContract,
+  useBattleflyMetadata,
   useCollections,
   useContractApprovals,
   useCreateListing,
+  useFoundersMetadata,
   useRemoveListing,
   useUpdateListing,
 } from "../../lib/hooks";
@@ -35,13 +37,7 @@ import Link from "next/link";
 import { CenterLoadingDots } from "../../components/CenterLoadingDots";
 import { formatEther } from "ethers/lib/utils";
 import { formatDistanceToNow } from "date-fns";
-import {
-  BATTLEFLY_METADATA,
-  BridgeworldItems,
-  FEE,
-  smolverseItems,
-  USER_SHARE,
-} from "../../const";
+import { BridgeworldItems, FEE, smolverseItems, USER_SHARE } from "../../const";
 import { TokenStandard } from "../../../generated/queries.graphql";
 import { useMagic } from "../../context/magicContext";
 import Listings from "../../components/Listings";
@@ -865,37 +861,8 @@ const Inventory = () => {
     }
   );
 
-  const battleflyMetadatas = useQueries(
-    battleflyTokens.map((id) => ({
-      queryKey: ["metadata-bf", id],
-      queryFn: () =>
-        fetch(
-          `${process.env.NEXT_PUBLIC_BATTLEFLY_API}/battleflies/${parseInt(
-            id.slice(45),
-            16
-          )}/metadata`
-        ).then((res) => res.json()),
-      select: (data) =>
-        data.status === 404 ? BATTLEFLY_METADATA.battleflies : { id, ...data },
-      refetchInterval: false as const,
-    }))
-  );
-
-  const foundersMetadatas = useQueries(
-    foundersTokens.map((id) => ({
-      queryKey: ["metadata-fs", id],
-      queryFn: () =>
-        fetch(
-          `${process.env.NEXT_PUBLIC_BATTLEFLY_API}/specials/${parseInt(
-            id.slice(45),
-            16
-          )}/metadata`
-        ).then((res) => res.json()),
-      select: (data) =>
-        data.status === 404 ? BATTLEFLY_METADATA.specials : { id, ...data },
-      refetchInterval: false as const,
-    }))
-  );
+  const battleflyMetadata = useBattleflyMetadata(battleflyTokens);
+  const foundersMetadata = useFoundersMetadata(foundersTokens);
 
   const tabs = useMemo(() => {
     if (inventory.data?.user?.inactive.length) {
@@ -1014,12 +981,12 @@ const Inventory = () => {
                       const smolMetadata = smolverseMetadata?.tokens.find(
                         (item) => item.id === token.id
                       );
-                      const bfMetadata = battleflyMetadatas.find(
-                        (item) => item.data?.id === token.id
-                      )?.data;
-                      const fsMetadata = foundersMetadatas.find(
-                        (item) => item.data?.id === token.id
-                      )?.data;
+                      const bfMetadata = battleflyMetadata.data?.find(
+                        (item) => item.id === token.id
+                      );
+                      const fsMetadata = foundersMetadata.data?.find(
+                        (item) => item.id === token.id
+                      );
 
                       const metadata = bwMetadata
                         ? {

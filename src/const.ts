@@ -41,16 +41,12 @@ export const BATTLEFLY_METADATA = {
       "https://ipfs.infura.io/ipfs/QmecUwQADn2yd2tNBoVvWLuknYMxY8WLnWVfATHG452VJP",
     attributes: [
       {
-        attribute: {
-          trait_type: "Type",
-          value: "Genesis",
-        },
+        trait_type: "Type",
+        value: "Genesis",
       },
       {
-        attribute: {
-          trait_type: "Class",
-          value: "Edition",
-        },
+        trait_type: "Class",
+        value: "Edition",
       },
     ],
   },

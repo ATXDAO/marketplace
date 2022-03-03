@@ -484,7 +484,82 @@ type Metadata = {
   description?: string;
   image?: string | null;
   name: string;
+  attributes?: Array<{
+    attribute: {
+      name: string;
+      value: string;
+    };
+  }> | null;
 };
+
+const normalizeAttributes = (data) => ({
+  ...data,
+  attributes: data.attributes.map(({ attribute, trait_type: name, value }) => ({
+    attribute: attribute ?? { name, value },
+  })),
+});
+
+function useBattleflyApi<
+  InputT extends string | string[],
+  MetadataT = InputT extends string[] ? Metadata[] : Metadata
+>(key: "bf" | "founders", input: InputT) {
+  const id = Array.isArray(input) ? input[0] ?? "" : (input as string);
+  const tokenId = id.startsWith("0x") ? parseInt(id.slice(45), 16) : id;
+  const enabled = !!tokenId;
+  const slug = key === "bf" ? "battleflies" : "specials";
+
+  const initialData = useCallback(() => {
+    if (!enabled) {
+      return undefined;
+    }
+
+    const data = normalizeAttributes(BATTLEFLY_METADATA[slug]);
+
+    return Array.isArray(input) ? input.map((id) => ({ id, ...data })) : data;
+  }, [enabled, input, slug]);
+
+  return useQuery<MetadataT>(
+    [`${key}-metadata`, input],
+    () =>
+      fetch(
+        `${process.env.NEXT_PUBLIC_BATTLEFLY_API}/${slug}/${tokenId}/metadata`
+      ).then((res) => res.json()),
+    {
+      enabled,
+      refetchInterval: false,
+      keepPreviousData: true,
+      initialData,
+      select: useCallback(
+        (value) => {
+          if (Array.isArray(value)) {
+            return value;
+          }
+
+          const data = normalizeAttributes(
+            "name" in value ? value : BATTLEFLY_METADATA[slug]
+          );
+
+          return Array.isArray(input)
+            ? input.map((id) => ({ id, ...data }))
+            : data;
+        },
+        [input, slug]
+      ),
+    }
+  );
+}
+
+export function useBattleflyMetadata<InputT extends string | string[]>(
+  input: InputT
+) {
+  return useBattleflyApi("bf", input);
+}
+
+export function useFoundersMetadata<InputT extends string | string[]>(
+  input: InputT
+) {
+  return useBattleflyApi("founders", input);
+}
 
 export function useMetadata(
   collectionName: string,
@@ -547,57 +622,11 @@ export function useMetadata(
     }
   );
 
-  const battleflyMetadataResult = useQuery(
-    ["bf-metadata", id],
-    () =>
-      fetch(
-        `${process.env.NEXT_PUBLIC_BATTLEFLY_API}/battleflies/${parseInt(
-          id.slice(45),
-          16
-        )}/metadata`
-      ).then((res) => res.json()),
-    {
-      enabled: !!id && isBattleflyItem,
-      refetchInterval: false,
-      keepPreviousData: true,
-      select: useCallback(
-        (data) =>
-          data.status === 404
-            ? BATTLEFLY_METADATA.battleflies
-            : {
-                ...data,
-                attributes: data.attributes.map((attribute) => ({ attribute })),
-              },
-        []
-      ),
-    }
+  const battleflyMetadataResult = useBattleflyMetadata(
+    isBattleflyItem ? id : ""
   );
 
-  const foundersMetadataResult = useQuery(
-    ["founders-metadata", id],
-    () =>
-      fetch(
-        `${process.env.NEXT_PUBLIC_BATTLEFLY_API}/specials/${parseInt(
-          id.slice(45),
-          16
-        )}/metadata`
-      ).then((res) => res.json()),
-    {
-      enabled: !!id && isFoundersItem,
-      refetchInterval: false,
-      keepPreviousData: true,
-      select: useCallback(
-        (data) =>
-          data.status === 404
-            ? BATTLEFLY_METADATA.specials
-            : {
-                ...data,
-                attributes: data.attributes.map((attribute) => ({ attribute })),
-              },
-        []
-      ),
-    }
-  );
+  const foundersMetadataResult = useFoundersMetadata(isFoundersItem ? id : "");
 
   const data = {
     battlefly: battleflyMetadataResult.data,
