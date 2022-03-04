@@ -4,6 +4,7 @@ import {
   XIcon,
   SpeakerphoneIcon,
   ExclamationIcon,
+  ExternalLinkIcon,
 } from "@heroicons/react/outline";
 import { Dialog, Transition } from "@headlessui/react";
 import Link from "next/link";
@@ -421,8 +422,26 @@ const Header = () => {
                   />
                 </span>
                 <p className="ml-3 font-medium text-white">
-                  <span>
-                    Marketplace actions have been disabled temporarily.
+                  <span className="lg:hidden">
+                    The Treasure Marketplace has currently been disabled as
+                    we&apos;re patching a critical exploit. Your NFTs are safe.
+                  </span>
+                  <span className="hidden lg:block">
+                    The Treasure Marketplace has currently been disabled as
+                    we&apos;re patching a critical exploit. We aim to have the
+                    marketplace online again in the coming days. Your NFTs are
+                    safe. Follow us on{" "}
+                    <a
+                      className="inline-flex items-center gap-1"
+                      href="https://twitter.com/Treasure_DAO"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Twitter
+                      <ExternalLinkIcon className="w-4 h-4" />
+                    </a>{" "}
+                    and keep an eye on the announcements channel in our Discord
+                    for updates on this matter.
                   </span>
                 </p>
               </div>
