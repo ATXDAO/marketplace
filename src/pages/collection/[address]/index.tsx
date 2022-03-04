@@ -393,6 +393,25 @@ const Collection = () => {
       select: (data) => unique(data.treasureInfos.map((item) => item.boost)),
     }
   );
+  const battleflyAttributes = useQuery(
+    ["battlefly-attributes"],
+    () =>
+      fetch(
+        `${process.env.NEXT_PUBLIC_BATTLEFLY_API}/battleflies/attributes`
+      ).then((res) => res.json()),
+    {
+      enabled: isBattleflyItem,
+      refetchInterval: false,
+      select: (data) =>
+        data.reduce((acc, { name, values }) => {
+          values.forEach(({ value }) => {
+            acc.push({ name, value, percentage: null });
+          });
+
+          return acc;
+        }, []),
+    }
+  );
 
   const attributeFilterList = React.useMemo(() => {
     switch (true) {
@@ -443,10 +462,12 @@ const Collection = () => {
         };
       default:
         return reduceAttributes(
-          collectionAttributesData?.collection?.attributes
+          collectionAttributesData?.collection?.attributes ??
+            battleflyAttributes.data
         );
     }
   }, [
+    battleflyAttributes.data,
     collectionAttributesData?.collection?.attributes,
     collectionName,
     treasureBoosts.data,
@@ -514,7 +535,8 @@ const Collection = () => {
         Boolean(listedTokens.data) &&
         attributeIds.length > 0 &&
         !isBridgeworldItem &&
-        !isSmolverseItem,
+        !isSmolverseItem &&
+        !isBattleflyItem,
       select: React.useCallback(
         ({
           metadataAttributes,
@@ -639,11 +661,54 @@ const Collection = () => {
       ),
     }
   );
+  const filteredBattleflyTokens = useQuery(
+    ["bf-filtered-tokens", listedTokens.data, filters],
+    () =>
+      fetch(
+        `${
+          process.env.NEXT_PUBLIC_BATTLEFLY_API
+        }/battleflies/ids?${formattedSearch
+          ?.split("&")
+          .map((filters) =>
+            filters.split("=").reduce(
+              (field, values) =>
+                field
+                  ? `${field}=${values
+                      .split("%2C")
+                      .map((value, index) =>
+                        index > 0 ? `${field}=${value}` : value
+                      )
+                      .join("&")}`
+                  : values.slice(0, 1).toLowerCase().concat(values.slice(1)),
+              ""
+            )
+          )
+          .join("&")}`
+      ).then((res) => res.json()),
+    {
+      enabled:
+        Boolean(listedTokens.data) &&
+        Object.keys(filters).length > 0 &&
+        isBattleflyItem,
+      refetchInterval: false,
+      select: React.useCallback(
+        (data: { items: number[] }) => {
+          const hexxed = data.items.map((id) => `0x${id.toString(16)}`);
+
+          return listedTokens.data?.filter((id) =>
+            hexxed.some((hex) => id.endsWith(hex))
+          );
+        },
+        [listedTokens.data]
+      ),
+    }
+  );
 
   // Use filtered or listed tokenIds to perform text search
   const searchedTokens = useQuery(
     [
       "searched-token",
+      filteredBattleflyTokens.data,
       filteredTreasureTokens.data,
       filteredBridgeworldTokens.data,
       filteredSmolTokens.data,
@@ -654,6 +719,7 @@ const Collection = () => {
       marketplace.getTokensByName({
         name: searchParams,
         ids:
+          filteredBattleflyTokens.data ??
           filteredTreasureTokens.data ??
           filteredBridgeworldTokens.data ??
           filteredSmolTokens.data ??
@@ -675,12 +741,14 @@ const Collection = () => {
   const tokenIds = React.useMemo(
     () =>
       searchedTokens.data ??
+      filteredBattleflyTokens.data ??
       filteredTreasureTokens.data ??
       filteredBridgeworldTokens.data ??
       filteredSmolTokens.data ??
       listedTokens.data,
     [
       searchedTokens.data,
+      filteredBattleflyTokens.data,
       filteredTreasureTokens.data,
       filteredBridgeworldTokens.data,
       filteredSmolTokens.data,
