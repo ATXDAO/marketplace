@@ -421,7 +421,9 @@ const Header = () => {
                   />
                 </span>
                 <p className="ml-3 font-medium text-white">
-                  <span>Purchasing has been disabled temporarily.</span>
+                  <span>
+                    Marketplace actions have been disabled temporarily.
+                  </span>
                 </p>
               </div>
             </div>
