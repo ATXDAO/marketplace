@@ -251,7 +251,7 @@ export function useCreateListing() {
       expires: number
     ) => {
       setInfo({ nft, quantity });
-      sell.send(address, tokenId, quantity, price, expires);
+      sell.send(address, tokenId, quantity, price, Math.round(expires / 1000));
 
       webhook.current = () => {
         const { collection, name, source } = nft;
@@ -439,7 +439,13 @@ export function useUpdateListing() {
       expires: number
     ) => {
       setInfo({ nft, quantity });
-      update.send(address, tokenId, quantity, price, expires);
+      update.send(
+        address,
+        tokenId,
+        quantity,
+        price,
+        Math.round(expires / 1000)
+      );
 
       webhook.current = () => {
         const { collection, listing, name, source, tokenId } = nft;
