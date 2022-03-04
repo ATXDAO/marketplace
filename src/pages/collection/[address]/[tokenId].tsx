@@ -493,6 +493,7 @@ export default function TokenDetail() {
                         <div className="max-w-xs flex-1">
                           <Button
                             className="py-3 px-8 text-base"
+                            disabled
                             onClick={() => {
                               if (
                                 tokenInfo.lowestPrice &&
@@ -626,10 +627,11 @@ export default function TokenDetail() {
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                               <Button
-                                                disabled={addressEqual(
-                                                  listing.seller.id,
-                                                  account ?? AddressZero
-                                                )}
+                                                // disabled={addressEqual(
+                                                //   listing.seller.id,
+                                                //   account ?? AddressZero
+                                                // )}
+                                                disabled
                                                 tooltip={
                                                   addressEqual(
                                                     listing.seller.id,
