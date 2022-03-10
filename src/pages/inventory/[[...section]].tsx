@@ -807,8 +807,8 @@ const Inventory = () => {
     return (data as InventoryToken[]).reduce(
       (acc, { token }) => {
         const collectionName =
-          allCollections.find(({ address }) => address === token.collection.id)
-            ?.name ?? "";
+          allCollections.find(({ id }) => id === token.collection.id)?.name ??
+          "";
 
         if (BridgeworldItems.includes(collectionName)) {
           acc.bridgeworldTokens.push(token.id);

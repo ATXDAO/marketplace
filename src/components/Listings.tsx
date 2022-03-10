@@ -63,8 +63,7 @@ const Listings: FC<ListingProps> = ({
     return listings.reduce(
       (acc, { collection, token }) => {
         const collectionName =
-          collections.find(({ address }) => address === collection.id)?.name ??
-          "";
+          collections.find(({ id }) => id === collection.id)?.name ?? "";
 
         if (BridgeworldItems.includes(collectionName)) {
           acc.bridgeworldTokens.push(token.id);
