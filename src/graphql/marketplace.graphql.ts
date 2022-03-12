@@ -97,14 +97,11 @@ export const getCollectionListings = gql`
     ) @include(if: $isERC1155) {
       __typename
       id
-      floorPrice
       tokenId
-      listings(
-        where: { status: Active, quantity_gt: 0 }
-        orderBy: pricePerItem
-      ) {
-        pricePerItem
-        quantity
+      name
+      stats {
+        floorPrice
+        listings
       }
     }
     listings(

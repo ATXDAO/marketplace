@@ -15,7 +15,6 @@ import {
   marketplace,
   smolverse,
 } from "../../../lib/client";
-import { Zero } from "@ethersproject/constants";
 import { CenterLoadingDots } from "../../../components/CenterLoadingDots";
 import { abbreviatePrice, formatNumber, formatPrice } from "../../../utils";
 import { formatEther } from "ethers/lib/utils";
@@ -117,19 +116,6 @@ const sortToDirection = (sort: string) => {
       return OrderDirection.desc;
   }
   return assertUnreachable();
-};
-
-const getTotalQuantity = (
-  listings: NonNullable<
-    NonNullable<GetCollectionListingsQuery>["tokens"]
-  >[number]["listings"]
-) => {
-  return listings && listings.length > 0
-    ? listings.reduce<number>(
-        (acc, listing) => acc + Number(listing.quantity),
-        0
-      )
-    : 0;
 };
 
 const formatSearchFilter = (search: string | undefined) => {
@@ -532,7 +518,6 @@ const Collection = () => {
         erc721Filters: {
           status: Status.Active,
           token_in: tokenIds,
-          quantity_gt: 0,
         },
         erc721Ordering: sortToField(sortParam),
         isERC1155,
@@ -622,17 +607,6 @@ const Collection = () => {
       listings.fetchNextPage();
     }
   }, [listings, inView]);
-
-  const listingsWithoutDuplicates =
-    statData?.collection?.listings.reduce((acc, curr) => {
-      if (curr.token.name && !acc[curr.token.name]) {
-        acc[curr.token.name] = formatNumber(
-          parseFloat(formatEther(curr.token.floorPrice || Zero))
-        );
-      }
-
-      return acc;
-    }, {}) ?? {};
 
   return (
     <main>
@@ -893,7 +867,7 @@ const Collection = () => {
                       <React.Fragment key={i}>
                         {/* ERC1155 */}
                         {group.tokens
-                          ?.filter((token) => Boolean(token?.listings?.length))
+                          ?.filter((token) => token.stats?.listings)
                           .map((token) => {
                             const erc1155Metadata =
                               legacyMetadata.data?.tokens?.find(
@@ -964,9 +938,7 @@ const Collection = () => {
                                   <p className="dark:text-gray-100 text-sm xl:text-base capsize">
                                     {formatNumber(
                                       parseFloat(
-                                        formatEther(
-                                          token?.listings?.[0]?.pricePerItem
-                                        )
+                                        formatEther(token.stats?.floorPrice)
                                       )
                                     )}{" "}
                                     <span className="text-[0.5rem] xl:text-xs font-light">
@@ -978,7 +950,7 @@ const Collection = () => {
                                       Listed Items:
                                     </span>{" "}
                                     <span className="font-bold text-gray-700 dark:text-gray-300">
-                                      {getTotalQuantity(token.listings)}
+                                      {token.stats?.listings.toLocaleString()}
                                     </span>
                                   </p>
                                 </div>
@@ -1249,7 +1221,7 @@ const Collection = () => {
         <DetailedFloorPriceModal
           isOpen={true}
           onClose={() => setDetailedFloorPriceModalOpen(false)}
-          listingsWithoutDuplicates={listingsWithoutDuplicates}
+          tokens={listings.data?.pages[0].tokens}
         />
       )}
     </main>
@@ -1259,13 +1231,13 @@ const Collection = () => {
 const DetailedFloorPriceModal = ({
   isOpen,
   onClose,
-  listingsWithoutDuplicates,
+  tokens = [],
 }: {
   isOpen: boolean;
   onClose: () => void;
-  listingsWithoutDuplicates: { [key: string]: string };
+  tokens: GetCollectionListingsQuery["tokens"];
 }) => {
-  const [lists, setList] = useState(listingsWithoutDuplicates);
+  const [lists, setList] = useState(tokens);
 
   return (
     <Modal onClose={onClose} isOpen={isOpen} title="Compare floor prices">
@@ -1274,19 +1246,16 @@ const DetailedFloorPriceModal = ({
           placeholder="Search Token..."
           onSelectionChange={(key) => {
             if (!key) {
-              setList(listingsWithoutDuplicates);
+              setList(tokens);
               return;
             }
-            const targetCollection = { [key]: lists[key] };
 
-            setList(targetCollection);
+            setList(tokens.filter((token) => token.name === key));
           }}
         >
-          {Object.keys(listingsWithoutDuplicates)
-            .sort()
-            .map((key) => (
-              <Item key={key}>{key}</Item>
-            ))}
+          {lists.map((list) => (
+            <Item key={list.name}>{list.name}</Item>
+          ))}
         </SearchAutocomplete>
         <div className="flex flex-col mt-2">
           <div className="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
@@ -1310,13 +1279,15 @@ const DetailedFloorPriceModal = ({
                     </tr>
                   </thead>
                   <tbody>
-                    {Object.keys(lists)
-                      .sort()
+                    {lists
+                      .sort(
+                        (left, right) =>
+                          left.name?.localeCompare(right.name ?? "") ?? 0
+                      )
                       .map((list, listIdx) => {
-                        const floorPrice = lists[list];
                         return (
                           <tr
-                            key={list}
+                            key={list.name}
                             className={
                               listIdx % 2 === 0
                                 ? "bg-white dark:bg-gray-200"
@@ -1324,10 +1295,12 @@ const DetailedFloorPriceModal = ({
                             }
                           >
                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-700">
-                              {list}
+                              {list.name}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-700">
-                              {floorPrice}
+                              {formatNumber(
+                                parseFloat(formatEther(list.stats?.floorPrice))
+                              )}
                             </td>
                           </tr>
                         );
