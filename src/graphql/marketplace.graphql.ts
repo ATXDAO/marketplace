@@ -210,13 +210,14 @@ export const getERC1155Listings = gql`
   query getERC1155Listings(
     $collectionId: String!
     $tokenId: BigInt!
+    $quantity: Int!
     $skipBy: Int!
     $first: Int!
   ) {
     tokens(where: { collection: $collectionId, tokenId: $tokenId }) {
       tokenId
       listings(
-        where: { status: Active, quantity_gt: 0 }
+        where: { status: Active, quantity_gte: $quantity }
         skip: $skipBy
         first: $first
         orderBy: pricePerItem

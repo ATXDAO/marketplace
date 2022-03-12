@@ -5,6 +5,7 @@ import {
   CurrencyDollarIcon,
   ExternalLinkIcon,
   EyeOffIcon,
+  FilterIcon,
   ShoppingCartIcon,
   SwitchHorizontalIcon,
 } from "@heroicons/react/solid";
@@ -58,6 +59,7 @@ import { NormalizedMetadata, targetNftT } from "../../../types";
 import { Tooltip } from "../../../components/Tooltip";
 import { utils } from "ethers";
 import { EthIcon, SwapIcon, UsdIcon } from "../../../components/Icons";
+import { useDebounce } from "use-debounce";
 
 const MAX_ITEMS_PER_PAGE = 10;
 
@@ -110,6 +112,12 @@ export default function TokenDetail() {
   const router = useRouter();
   const { account } = useEthers();
   const queryClient = useQueryClient();
+  const [quantity, setQuantity] = React.useState(0);
+  const [debouncedQuantity] = useDebounce(quantity, 300);
+  const [isFilterOpen, toggleFilterOpen] = React.useReducer(
+    (state: boolean) => !state,
+    false
+  );
 
   const { address: slugOrAddress, tokenId } = router.query;
   const [modalProps, setModalProps] = React.useState<{
@@ -165,6 +173,7 @@ export default function TokenDetail() {
       marketplace.getERC1155Listings({
         collectionId: formattedAddress,
         tokenId: formattedTokenId,
+        quantity: debouncedQuantity,
         skipBy: pageParam,
         first: MAX_ITEMS_PER_PAGE,
       }),
@@ -543,7 +552,7 @@ export default function TokenDetail() {
                             <div className="shadow border-b border-gray-200 rounded-lg overflow-auto max-h-72">
                               <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-400">
                                 <thead className="bg-gray-50 dark:bg-gray-500 sticky top-0 z-10">
-                                  <tr>
+                                  <tr className="h-[4.5rem]">
                                     <th
                                       scope="col"
                                       className="px-6 py-3 text-left text-[0.5rem] md:text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider whitespace-nowrap"
@@ -560,17 +569,40 @@ export default function TokenDetail() {
                                       scope="col"
                                       className="px-6 py-3 text-left text-[0.5rem] md:text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
                                     >
-                                      <span className="hidden md:inline">
-                                        Quantity
-                                      </span>
-                                      <span className="inline md:hidden">
-                                        Qty
-                                      </span>
+                                      <div className="flex flex-wrap items-center w-24">
+                                        <span>Quantity</span>
+                                        <button
+                                          type="button"
+                                          className="ml-2 text-gray-400 hover:text-gray-500"
+                                          onClick={toggleFilterOpen}
+                                        >
+                                          <span className="sr-only">
+                                            Filter quantity
+                                          </span>
+                                          <FilterIcon
+                                            className="w-4 h-4"
+                                            aria-hidden="true"
+                                          />
+                                        </button>
+                                        {isFilterOpen ? (
+                                          <input
+                                            className="outline-none mt-1 py-1 w-full dark:placeholder-gray-400 dark:text-gray-200 relative px-2 inline-flex bg-white dark:bg-black flex-row items-center rounded-md overflow-hidden shadow-sm border border-gray-300 dark:border-gray-500 focus:border-red-500 focus:dark:border-gray-200"
+                                            onChange={(event) =>
+                                              setQuantity(
+                                                Number(event.target.value)
+                                              )
+                                            }
+                                            placeholder="E.g. 10"
+                                            type="number"
+                                            value={quantity ? quantity : ""}
+                                          />
+                                        ) : null}
+                                      </div>
                                     </th>
 
                                     <th
                                       scope="col"
-                                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider hidden lg:table-cell"
+                                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase whitespace-nowrap tracking-wider hidden lg:table-cell"
                                     >
                                       Expire In
                                     </th>
@@ -588,7 +620,7 @@ export default function TokenDetail() {
                                 <tbody className="bg-white divide-y divide-gray-200 dark:divide-gray-400 dark:bg-gray-300 relative">
                                   {listingData.pages.map((page, i) => (
                                     <React.Fragment key={i}>
-                                      {(page.tokens[0]?.listings || []).map(
+                                      {(page.tokens[0]?.listings ?? []).map(
                                         (listing) => (
                                           <tr key={listing.id}>
                                             <td className="px-6 py-4 whitespace-nowrap text-[0.7rem] md:text-sm font-medium text-gray-900">
@@ -610,7 +642,7 @@ export default function TokenDetail() {
                                               ETH
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-[0.7rem] md:text-sm text-gray-500 dark:text-gray-700">
-                                              {listing.quantity}
+                                              {listing.quantity.toLocaleString()}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-700 hidden lg:table-cell">
                                               {formatDistanceToNow(
@@ -1272,7 +1304,13 @@ const PurchaseItemModal = ({
                       </span>
                     </p>
 
-                    <div className="ml-4">
+                    <div className="flex flex-col items-end space-y-1 ml-4">
+                      <button
+                        className="text-gray-500 dark:text-gray-400 transition-colors duration-300 motion-reduce:transition-none hover:text-red-500"
+                        onClick={() => setQuantity(Number(payload.quantity))}
+                      >
+                        Max
+                      </button>
                       <label htmlFor="quantity" className="sr-only">
                         Quantity
                       </label>
