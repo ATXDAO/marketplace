@@ -315,6 +315,7 @@ export default function TokenDetail() {
                         metadata:
                           metadata?.description && metadata?.image
                             ? {
+                                attributes: metadata.attributes as any,
                                 description: metadata.description,
                                 image: metadata.image,
                               }
