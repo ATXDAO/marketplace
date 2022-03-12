@@ -499,12 +499,19 @@ type Metadata = {
   image?: string | null;
   name: string;
   tokenId?: string | number;
-  attributes?: Array<{
-    attribute: {
-      name: string;
-      value: string;
-    };
-  }> | null;
+  attributes?: Array<
+    | {
+        attribute: {
+          name: string;
+          value: string;
+        };
+      }
+    | {
+        name: string;
+        percentage?: string;
+        value: string;
+      }
+  > | null;
 };
 
 const normalizeAttributes = (data) => ({
@@ -667,6 +674,9 @@ export function useMetadata(
             description: collectionName,
             image: smolverseMetadata.image,
             name: smolverseMetadata.name,
+            attributes: smolverseMetadata.attributes?.map((attribute) => ({
+              attribute,
+            })),
           }
         : tokenMetadata ??
           legacyMetadata ??
