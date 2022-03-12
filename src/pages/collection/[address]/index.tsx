@@ -1098,7 +1098,6 @@ const Collection = () => {
                                 name: svMetadata.name,
                                 tokenId: listing.token.tokenId,
                                 metadata: {
-                                  attributes: svMetadata.attributes,
                                   image: svMetadata.image ?? "",
                                   name: svMetadata.name,
                                   description: collectionName,
@@ -1115,7 +1114,7 @@ const Collection = () => {
                                 {metadata ? (
                                   <ImageWrapper
                                     className="w-full h-full object-center object-fill group-hover:opacity-75"
-                                    token={metadata as any}
+                                    token={metadata}
                                   />
                                 ) : (
                                   <div className="animate-pulse w-full bg-gray-300 h-64 rounded-md m-auto" />

@@ -259,7 +259,8 @@ const Drawer = ({
                         <div className="block w-full aspect-w-1 aspect-h-1 sm:aspect-w-5 sm:aspect-h-5 rounded-lg overflow-hidden">
                           <ImageWrapper
                             className="object-fill object-center"
-                            token={nft as any}
+                            src={nft.source}
+                            token={nft}
                           />
                         </div>
                         <div className="mt-4 flex items-start justify-between">
@@ -1040,7 +1041,6 @@ const Inventory = () => {
                                   name: smolMetadata.name,
                                   tokenId: smolMetadata.tokenId,
                                   metadata: {
-                                    attributes: smolMetadata.attributes as any,
                                     image: smolMetadata.image ?? "",
                                     name: smolMetadata.name,
                                     description: token.collection.name,
@@ -1126,7 +1126,6 @@ const Inventory = () => {
                                                   quantity,
                                                 }
                                               : undefined,
-                                          metadata: metadata?.metadata as any,
                                           source:
                                             metadata?.metadata?.image.includes(
                                               "ipfs"

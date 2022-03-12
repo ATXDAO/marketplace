@@ -283,7 +283,6 @@ const Listings: FC<ListingProps> = ({
                         name: svMetadata.name,
                         tokenId: listing.token.tokenId,
                         metadata: {
-                          attributes: svMetadata.attributes,
                           image: svMetadata.image ?? "",
                           name: svMetadata.name,
                           description: collectionName ?? "",
@@ -346,7 +345,7 @@ const Listings: FC<ListingProps> = ({
                         {metadata?.metadata ? (
                           <ImageWrapper
                             height={48}
-                            token={metadata as any}
+                            token={metadata}
                             width={48}
                           />
                         ) : (

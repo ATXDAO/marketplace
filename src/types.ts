@@ -44,7 +44,6 @@ export type Nft = {
     pricePerItem: string;
     quantity: number;
   };
-  metadata?: NormalizedMetadata;
   name: string;
   total: number;
   standard: TokenStandard;
