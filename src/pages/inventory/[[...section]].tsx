@@ -943,15 +943,23 @@ const Inventory = () => {
                         );
                       })}
                     </nav>
-                    <MobileFilterButton />
+                    {section === "" ? <MobileFilterButton /> : null}
                   </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-4 gap-x-8 gap-y-10">
-                <div className="hidden lg:block sticky top-6">
-                  <Filters />
-                </div>
+              <div
+                className={classNames(
+                  section === ""
+                    ? "grid grid-cols-1 lg:grid-cols-4 gap-x-8 gap-y-10"
+                    : ""
+                )}
+              >
+                {section === "" ? (
+                  <div className="hidden lg:block sticky top-6">
+                    <Filters />
+                  </div>
+                ) : null}
 
                 <div
                   className={classNames(
