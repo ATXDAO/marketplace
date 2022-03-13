@@ -121,7 +121,7 @@ const reduceAttributes = (
           acc[attribute.name] = [
             {
               value: attribute.value,
-              percentage: `${attribute.percentage}`,
+              percentage: attribute.percentage ? `${attribute.percentage}` : "",
             },
           ];
           return acc;
@@ -130,7 +130,7 @@ const reduceAttributes = (
           ...acc[attribute.name],
           {
             value: attribute.value,
-            percentage: `${attribute.percentage}`,
+            percentage: attribute.percentage ? `${attribute.percentage}` : "",
           },
         ];
         return acc;
@@ -396,9 +396,7 @@ export function Filters() {
                                 </label>
                               </div>
                               <p className="text-gray-400 dark:text-gray-500">
-                                {percentage !== null
-                                  ? formatPercent(percentage)
-                                  : ""}
+                                {percentage ? formatPercent(percentage) : ""}
                               </p>
                             </div>
                           )
