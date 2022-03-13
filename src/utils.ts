@@ -1,5 +1,6 @@
 import { formatEther } from "ethers/lib/utils";
 import { BigNumberish } from "ethers";
+import { Zero } from "@ethersproject/constants";
 
 const UNITS = ["", "K", "M", "B", "T", "Q"];
 
@@ -20,7 +21,7 @@ export const generateIpfsLink = (hash: string) => {
 export const formatNumber = (number: number) =>
   new Intl.NumberFormat().format(number);
 
-export const formatPrice = (price: BigNumberish) =>
+export const formatPrice = (price: BigNumberish = Zero) =>
   formatNumber(parseFloat(formatEther(price)));
 
 export const formattable = (string: BigNumberish) => {

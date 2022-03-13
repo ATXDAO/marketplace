@@ -162,7 +162,7 @@ export default function TokenDetail() {
     React.useState<boolean>(false);
   const { ethPrice } = useMagic();
 
-  const formattedTokenId = Array.isArray(tokenId) ? tokenId[0] : tokenId;
+  const formattedTokenId = Array.isArray(tokenId) ? tokenId[0] : `${tokenId}`;
 
   const { id: formattedAddress, name: collectionName } =
     useCollection(slugOrAddress);

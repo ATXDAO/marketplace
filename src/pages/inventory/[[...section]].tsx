@@ -749,8 +749,8 @@ const Inventory = () => {
 
       if (listing || inactiveListing) {
         const {
-          expires,
-          pricePerItem,
+          expires = "",
+          pricePerItem = "",
           quantity = 1,
         } = listing ?? inactiveListing ?? {};
 

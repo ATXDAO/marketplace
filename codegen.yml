@@ -2,6 +2,10 @@ overwrite: true
 config:
   namingConvention:
     enumValues: keep
+  scalars:
+    BigDecimal: string
+    BigInt: string
+    Bytes: string
 generates:
   generated/bridgeworld.graphql.ts:
     schema: ${NEXT_PUBLIC_BRIDGEWORLD_SUBGRAPH}

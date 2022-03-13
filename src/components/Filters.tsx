@@ -121,7 +121,7 @@ const reduceAttributes = (
           acc[attribute.name] = [
             {
               value: attribute.value,
-              percentage: attribute.percentage,
+              percentage: `${attribute.percentage}`,
             },
           ];
           return acc;
@@ -130,7 +130,7 @@ const reduceAttributes = (
           ...acc[attribute.name],
           {
             value: attribute.value,
-            percentage: attribute.percentage,
+            percentage: `${attribute.percentage}`,
           },
         ];
         return acc;

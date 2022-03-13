@@ -902,11 +902,7 @@ const Collection = () => {
                                     {metadata?.name}
                                   </p>
                                   <p className="dark:text-gray-100 text-sm xl:text-base capsize">
-                                    {formatNumber(
-                                      parseFloat(
-                                        formatEther(token.stats?.floorPrice)
-                                      )
-                                    )}{" "}
+                                    {formatPrice(token.stats?.floorPrice)}{" "}
                                     <span className="text-[0.5rem] xl:text-xs font-light">
                                       $MAGIC
                                     </span>
@@ -1255,9 +1251,7 @@ const DetailedFloorPriceModal = ({
                               {list.name}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-700">
-                              {formatNumber(
-                                parseFloat(formatEther(list.stats?.floorPrice))
-                              )}
+                              {formatPrice(list.stats?.floorPrice)}
                             </td>
                           </tr>
                         );

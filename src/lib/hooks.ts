@@ -508,7 +508,7 @@ type Metadata = {
       }
     | {
         name: string;
-        percentage?: string;
+        percentage?: string | null;
         value: string;
       }
   > | null;
