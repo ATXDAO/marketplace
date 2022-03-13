@@ -33,12 +33,15 @@ export type targetNftT = {
     standard: TokenStandard;
     tokenId: string;
   };
+  slug: string;
+  collection: string;
 };
 
 export type Nft = {
   address: string;
   collection: string;
   collectionId: string;
+  slug: string;
   listing?: {
     expires: string;
     pricePerItem: string;

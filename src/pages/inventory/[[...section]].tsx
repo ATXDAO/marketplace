@@ -981,10 +981,13 @@ const Inventory = () => {
                           className="grid grid-cols-1 gap-y-10 sm:grid-cols-2 gap-x-6 lg:grid-cols-4 xl:gap-x-8"
                         >
                           {data.map(({ id, quantity, token, ...item }) => {
-                            const slugOrAddress =
+                            const { slug = "" } =
                               allCollections.find(
                                 ({ name }) => name === token.collection.name
-                              )?.slug ?? token.collection.id;
+                              ) ?? {};
+                            const slugOrAddress = slug
+                              ? slug
+                              : token.collection.id;
 
                             const bwMetadata = bridgeworldMetadata?.tokens.find(
                               (item) => item.id === token.id
@@ -1087,10 +1090,8 @@ const Inventory = () => {
                                           address: token.collection.contract,
                                           collection: token.collection.name,
                                           collectionId: token.collection.id,
-                                          name:
-                                            bwMetadata?.name ??
-                                            token.name ??
-                                            "",
+                                          slug,
+                                          name: metadata?.name ?? "",
                                           listing:
                                             updates[
                                               `${token.collection.contract}-${token.tokenId}`
@@ -1102,9 +1103,14 @@ const Inventory = () => {
                                                 }
                                               : undefined,
                                           source:
-                                            metadata?.metadata?.image.includes(
-                                              "ipfs"
-                                            )
+                                            token.collection.name ===
+                                            "Smol Brains Land"
+                                              ? generateIpfsLink(
+                                                  "ipfs://QmUcEoYHwye65tsncGAtoz2bQLjQtrE2GiCa6L1PYNcbh7/0.png"
+                                                )
+                                              : metadata?.metadata?.image.includes(
+                                                  "ipfs"
+                                                )
                                               ? generateIpfsLink(
                                                   metadata?.metadata?.image
                                                 )

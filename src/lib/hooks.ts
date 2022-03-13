@@ -28,10 +28,10 @@ import { AddressZero } from "@ethersproject/constants";
 import { normalizeBridgeworldTokenMetadata } from "../utils/metadata";
 
 type WebhookBody = {
-  address: string;
   collection: string;
   expires?: number;
   image: string;
+  slug: string;
   tokenId: string;
   name: string;
   price: string;
@@ -263,10 +263,10 @@ export function useCreateListing() {
       sell.send(address, tokenId, quantity, price, Math.round(expires / 1000));
 
       webhook.current = () => {
-        const { collection, name, source } = nft;
+        const { collection, name, source, slug } = nft;
 
         callWebhook("list", {
-          address,
+          slug,
           collection,
           expires,
           tokenId: nft.tokenId,
@@ -367,15 +367,15 @@ export function useBuyItem() {
       sendBuy(address, tokenId, ownerAddress, quantity, pricePerItem);
 
       webhook.current = () => {
-        const { metadata, payload } = nft;
+        const { metadata, payload, slug, collection } = nft;
 
         callWebhook("sold", {
-          address,
-          collection: metadata?.description ?? "",
+          slug,
+          collection,
           image: metadata?.image?.includes("ipfs")
             ? generateIpfsLink(metadata.image)
             : metadata?.image ?? "",
-          name: `${metadata?.description ?? ""} ${metadata?.name ?? ""}`,
+          name: metadata?.name ?? "",
           tokenId: payload.tokenId,
           price: payload.pricePerItem.toString(),
           quantity,
@@ -457,10 +457,10 @@ export function useUpdateListing() {
       );
 
       webhook.current = () => {
-        const { collection, listing, name, source, tokenId } = nft;
+        const { collection, listing, slug, name, source, tokenId } = nft;
 
         callWebhook("update", {
-          address,
+          slug,
           collection,
           tokenId,
           expires: Number(listing?.expires ?? 0),
@@ -617,6 +617,13 @@ export function useMetadata(
         !isFoundersItem,
       refetchInterval: false,
       keepPreviousData: true,
+      select: ({ token }) => {
+        const metadata = token?.metadata;
+
+        return {
+          token: { ...token, metadata: { ...metadata, name: token?.name } },
+        };
+      },
     }
   );
 

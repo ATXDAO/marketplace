@@ -164,8 +164,11 @@ export default function TokenDetail() {
 
   const formattedTokenId = Array.isArray(tokenId) ? tokenId[0] : `${tokenId}`;
 
-  const { id: formattedAddress, name: collectionName } =
-    useCollection(slugOrAddress);
+  const {
+    id: formattedAddress,
+    name: collectionName,
+    slug,
+  } = useCollection(slugOrAddress);
 
   const { data, isLoading, isIdle } = useQuery(
     ["details", formattedAddress, formattedTokenId],
@@ -300,7 +303,9 @@ export default function TokenDetail() {
     metadataData.founders,
     undefined,
     smolverseMetadata,
-    tokenMetadata ? { ...tokenInfo, ...tokenMetadata, id } : undefined
+    tokenMetadata
+      ? { ...tokenInfo, ...tokenMetadata, name: tokenMetadata.name ?? "", id }
+      : undefined
   ) as NormalizedMetadata;
 
   const attributes = metadata
@@ -564,6 +569,8 @@ export default function TokenDetail() {
                                       standard: data.collection.standard,
                                       tokenId: tokenInfo.tokenId,
                                     },
+                                    slug,
+                                    collection: collectionName,
                                   },
                                 });
                               }
@@ -736,6 +743,9 @@ export default function TokenDetail() {
                                                           tokenId:
                                                             tokenInfo.tokenId,
                                                         },
+                                                        collection:
+                                                          collectionName,
+                                                        slug,
                                                       },
                                                     });
                                                   }
@@ -1266,7 +1276,7 @@ const PurchaseItemModal = ({
 }) => {
   const [quantity, setQuantity] = React.useState(1);
   const { account } = useEthers();
-  const { metadata, payload } = targetNft;
+  const { metadata, payload, collection } = targetNft;
   const chainId = useChainId();
 
   const { magicBalance, setSushiModalOpen } = useMagic();
@@ -1330,7 +1340,7 @@ const PurchaseItemModal = ({
                   <div className="min-w-0 flex-1">
                     <h4 className="text-sm">
                       <p className="text-sm text-gray-500 dark:text-gray-400 uppercase">
-                        {metadata?.description}
+                        {collection}
                       </p>
                       <p className="mt-1 font-medium text-gray-800 dark:text-gray-50">
                         {metadata?.name ?? ""}
