@@ -43,6 +43,8 @@ import {
 import {
   GetTokenDetailsQuery,
   GetTokenExistsInWalletQuery,
+  Listing_OrderBy,
+  OrderDirection,
   Status,
   TokenStandard,
 } from "../../../../generated/marketplace.graphql";
@@ -60,8 +62,37 @@ import { Tooltip } from "../../../components/Tooltip";
 import { utils } from "ethers";
 import { EthIcon, SwapIcon, UsdIcon } from "../../../components/Icons";
 import { useDebounce } from "use-debounce";
+import { SortMenu } from "../../../components/SortMenu";
 
 const MAX_ITEMS_PER_PAGE = 10;
+
+const sortOptions = [
+  {
+    name: "Price: Low to High",
+    direction: OrderDirection.asc,
+    value: Listing_OrderBy.pricePerItem,
+  },
+  {
+    name: "Price: High to Low",
+    direction: OrderDirection.desc,
+    value: Listing_OrderBy.pricePerItem,
+  },
+  {
+    name: "Quantity: Low to High",
+    direction: OrderDirection.asc,
+    value: Listing_OrderBy.quantity,
+  },
+  {
+    name: "Quantity: High to Low",
+    direction: OrderDirection.desc,
+    value: Listing_OrderBy.quantity,
+  },
+  {
+    name: "Latest",
+    value: Listing_OrderBy.blockTimestamp,
+    direction: OrderDirection.desc,
+  },
+];
 
 const CurrencySwitcher = ({ price }: { price: number }) => {
   const [currency, setCurrency] = React.useState<"eth" | "usd">("eth");
@@ -137,7 +168,7 @@ export default function TokenDetail() {
     useCollection(slugOrAddress);
 
   const { data, isLoading, isIdle } = useQuery(
-    ["details", formattedAddress],
+    ["details", formattedAddress, formattedTokenId],
     () =>
       marketplace.getTokenDetails({
         collectionId: formattedAddress,
@@ -145,6 +176,7 @@ export default function TokenDetail() {
       }),
     {
       enabled: formattedAddress !== AddressZero && Boolean(formattedTokenId),
+      keepPreviousData: true,
     }
   );
 
@@ -163,17 +195,32 @@ export default function TokenDetail() {
     }
   );
 
+  const [sortBy, sortDirection] = (
+    typeof router.query.sort === "string"
+      ? router.query.sort.split(":")
+      : [sortOptions[0].value, sortOptions[0].direction]
+  ) as [Listing_OrderBy, OrderDirection];
+
   const {
     data: listingData,
     isLoading: isListingLoading,
     fetchNextPage,
   } = useInfiniteQuery(
-    "erc1155Listings",
+    [
+      "erc1155Listings",
+      formattedAddress,
+      formattedTokenId,
+      debouncedQuantity,
+      sortBy,
+      sortDirection,
+    ],
     ({ pageParam = 0 }) =>
       marketplace.getERC1155Listings({
         collectionId: formattedAddress,
         tokenId: formattedTokenId,
         quantity: debouncedQuantity,
+        sortBy,
+        sortDirection,
         skipBy: pageParam,
         first: MAX_ITEMS_PER_PAGE,
       }),
@@ -536,7 +583,10 @@ export default function TokenDetail() {
 
                 {data.collection.standard === TokenStandard.ERC1155 && (
                   <div className="mt-10">
-                    <p>Listings</p>
+                    <div className="flex items-baseline justify-between">
+                      Listings
+                      <SortMenu options={sortOptions} />
+                    </div>
                     {isListingLoading && <CenterLoadingDots className="h-60" />}
                     {!hasErc1155Listings && !isListingLoading && (
                       <div className="flex flex-col justify-center items-center h-12 mt-4">
@@ -1219,7 +1269,7 @@ const PurchaseItemModal = ({
   const { metadata, payload } = targetNft;
   const chainId = useChainId();
 
-  const { magicBalance, ethPrice, setSushiModalOpen } = useMagic();
+  const { magicBalance, setSushiModalOpen } = useMagic();
 
   const normalizedAddress = address.slice(0, 42);
 

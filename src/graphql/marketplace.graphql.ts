@@ -173,33 +173,18 @@ const LISTING_FRAGMENT_WITH_TOKEN = gql`
 
 export const getActivity = gql`
   ${LISTING_FRAGMENT}
-  query getActivity($id: String!, $orderBy: Listing_orderBy!) {
+  query getActivity(
+    $filter: Listing_filter!
+    $first: Int!
+    $orderBy: Listing_orderBy!
+    $orderDirection: OrderDirection
+  ) {
     listings(
-      where: { status: Sold, collection: $id }
+      first: $first
+      where: $filter
       orderBy: $orderBy
       orderDirection: desc
     ) {
-      ...ListingFields
-    }
-  }
-`;
-
-export const getMyActivity = gql`
-  ${LISTING_FRAGMENT}
-  query getMyActivity($me: String) {
-    sold: listings(where: { status: Sold, seller: $me }) {
-      ...ListingFields
-    }
-    bought: listings(where: { status: Sold, buyer: $me }) {
-      ...ListingFields
-    }
-  }
-`;
-
-export const getAllActivities = gql`
-  ${LISTING_FRAGMENT}
-  query getAllActivities($orderBy: Listing_orderBy!) {
-    listings(where: { status: Sold }, orderBy: $orderBy, orderDirection: desc) {
       ...ListingFields
     }
   }
@@ -211,6 +196,8 @@ export const getERC1155Listings = gql`
     $collectionId: String!
     $tokenId: BigInt!
     $quantity: Int!
+    $sortBy: Listing_orderBy!
+    $sortDirection: OrderDirection!
     $skipBy: Int!
     $first: Int!
   ) {
@@ -220,8 +207,8 @@ export const getERC1155Listings = gql`
         where: { status: Active, quantity_gte: $quantity }
         skip: $skipBy
         first: $first
-        orderBy: pricePerItem
-        orderDirection: asc
+        orderBy: $sortBy
+        orderDirection: $sortDirection
       ) {
         ...ListingFieldsWithToken
       }

@@ -1,11 +1,6 @@
 import Router, { useRouter } from "next/router";
-import React, { Fragment, useEffect, useState } from "react";
-import { Menu, Transition } from "@headlessui/react";
-import {
-  ChevronDownIcon,
-  InformationCircleIcon,
-  ViewGridIcon,
-} from "@heroicons/react/solid";
+import React, { useEffect, useState } from "react";
+import { InformationCircleIcon, ViewGridIcon } from "@heroicons/react/solid";
 import LargeGridIcon from "../../../components/LargeGridIcon";
 
 import { useInfiniteQuery, useQuery } from "react-query";
@@ -32,7 +27,7 @@ import classNames from "clsx";
 import { useInView } from "react-intersection-observer";
 import { SearchAutocomplete } from "../../../components/SearchAutocomplete";
 import { Item } from "react-stately";
-import Listings from "../../../components/Listings";
+import { Activity } from "../../../components/Activity";
 import {
   useBattleflyMetadata,
   useCollection,
@@ -49,6 +44,7 @@ import {
   MobileFiltersWrapper,
   useFiltersList,
 } from "../../../components/Filters";
+import { SortMenu } from "../../../components/SortMenu";
 
 const MAX_ITEMS_PER_PAGE = 42;
 
@@ -80,43 +76,23 @@ const tabs = [
   { name: "Activity", value: "activity" },
 ];
 
-function QueryLink(props: any) {
-  const { href, children, ...rest } = props;
-  return (
-    <Link href={href}>
-      <a {...rest}>{children}</a>
-    </Link>
-  );
-}
-
 const sortOptions = [
-  { name: "Price: Low to High", value: "asc" },
-  { name: "Price: High to Low", value: "desc" },
-  { name: "Latest", value: "latest" },
+  {
+    name: "Price: Low to High",
+    value: Listing_OrderBy.pricePerItem,
+    direction: OrderDirection.asc,
+  },
+  {
+    name: "Price: High to Low",
+    value: Listing_OrderBy.pricePerItem,
+    direction: OrderDirection.desc,
+  },
+  {
+    name: "Latest",
+    value: Listing_OrderBy.blockTimestamp,
+    direction: OrderDirection.desc,
+  },
 ];
-
-function assertUnreachable(): never {
-  throw new Error("Didn't expect to get here");
-}
-
-const sortToField = (sort: string) => {
-  if (sort === "latest") {
-    return Listing_OrderBy.blockTimestamp;
-  }
-
-  return Listing_OrderBy.pricePerItem;
-};
-
-const sortToDirection = (sort: string) => {
-  switch (sort) {
-    case "asc":
-      return OrderDirection.asc;
-    case "desc":
-    case "latest":
-      return OrderDirection.desc;
-  }
-  return assertUnreachable();
-};
 
 const formatSearchFilter = (search: string | undefined) => {
   if (!search) return [];
@@ -162,13 +138,7 @@ const unique = <T,>(array: T[]) => Array.from(new Set(array));
 
 const Collection = () => {
   const router = useRouter();
-  const {
-    address: slugOrAddress,
-    sort,
-    tab,
-    activitySort,
-    search,
-  } = router.query;
+  const { address: slugOrAddress, tab, search } = router.query;
   const formattedSearch = Array.isArray(search) ? search[0] : search;
   const [searchToken, setSearchToken] = useState("");
   const [searchParams, setSearchParams] = useState("");
@@ -179,8 +149,6 @@ const Collection = () => {
   const filters = getInititalFilters(formattedSearch);
   const { ethPrice } = useMagic();
 
-  const sortParam = Array.isArray(sort) ? sort[0] : sort ?? OrderDirection.asc;
-  const activitySortParam = activitySort ?? "time";
   const { id: formattedAddress, name: collectionName } =
     useCollection(slugOrAddress);
 
@@ -196,21 +164,6 @@ const Collection = () => {
   if (collectionName === "Legions") {
     router.replace("/collection/legion-auxiliary");
   }
-
-  const { data: activityData, isLoading: isActivityLoading } = useQuery(
-    ["activity", { formattedAddress, activitySortParam }],
-    () =>
-      marketplace.getActivity({
-        id: formattedAddress,
-        orderBy:
-          activitySortParam === "price"
-            ? Listing_OrderBy.pricePerItem
-            : Listing_OrderBy.blockTimestamp,
-      }),
-    {
-      enabled: formattedTab === "activity",
-    }
-  );
 
   const { data: collectionData } = useQuery(
     ["collection-info", formattedAddress],
@@ -490,6 +443,12 @@ const Collection = () => {
     }
   );
 
+  const [erc721Ordering, orderDirection] = (
+    typeof router.query.sort === "string"
+      ? router.query.sort.split(":")
+      : [sortOptions[0].value, sortOptions[0].direction]
+  ) as [Listing_OrderBy, OrderDirection];
+
   // Use final list of tokens to paginate listings
   const tokenIds = React.useMemo(
     () =>
@@ -509,7 +468,7 @@ const Collection = () => {
     ]
   );
   const listings = useInfiniteQuery(
-    ["listings", isERC1155, sortParam, tokenIds],
+    ["listings", isERC1155, erc721Ordering, orderDirection, tokenIds],
     ({ pageParam = 0 }) =>
       marketplace.getCollectionListings({
         erc1155Filters: {
@@ -519,9 +478,9 @@ const Collection = () => {
           status: Status.Active,
           token_in: tokenIds,
         },
-        erc721Ordering: sortToField(sortParam),
+        erc721Ordering,
         isERC1155,
-        orderDirection: sortToDirection(sortParam),
+        orderDirection,
         skip: pageParam,
       }),
     {
@@ -760,7 +719,14 @@ const Collection = () => {
                         }}
                       />
                     </div>
-                    <Menu
+                    <SortMenu
+                      mobileFilterButtonSlot={<MobileFilterButton />}
+                      options={sortOptions.slice(
+                        0,
+                        isERC1155 ? -1 : sortOptions.length
+                      )}
+                    />
+                    {/* <Menu
                       as="div"
                       className="relative z-20 inline-block text-left"
                     >
@@ -817,7 +783,7 @@ const Collection = () => {
                           </div>
                         </Menu.Items>
                       </Transition>
-                    </Menu>
+                    </Menu> */}
                     {attributeFilterList && (
                       <button
                         type="button"
@@ -1204,16 +1170,7 @@ const Collection = () => {
             </div>
           </div>
         ) : (
-          <>
-            {isActivityLoading && <CenterLoadingDots className="h-60" />}
-            {activityData?.listings && (
-              <Listings
-                listings={activityData.listings}
-                title="Activity"
-                sort={activitySortParam}
-              />
-            )}
-          </>
+          <Activity title="Activity" />
         )}
       </div>
 

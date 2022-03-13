@@ -39,8 +39,7 @@ import { formatDistanceToNow } from "date-fns";
 import { BridgeworldItems, FEE, smolverseItems, USER_SHARE } from "../../const";
 import { TokenStandard } from "../../../generated/queries.graphql";
 import { useMagic } from "../../context/magicContext";
-import Listings from "../../components/Listings";
-import { ListingFieldsFragment } from "../../../generated/marketplace.graphql";
+import { Activity } from "../../components/Activity";
 import { Modal } from "../../components/Modal";
 import { useEthers } from "@usedapp/core";
 import {
@@ -694,9 +693,6 @@ const Inventory = () => {
   const { account } = useEthers();
   const [section] = router.query.section ?? [""];
 
-  const { activitySort } = router.query;
-  const sortParam = activitySort ?? "time";
-
   const inventory = useQuery(
     "inventory",
     () =>
@@ -705,31 +701,6 @@ const Inventory = () => {
       }),
     { enabled: !!account, refetchInterval: 30_000 }
   );
-
-  const myActivity = useQuery(
-    "my-activity",
-    () =>
-      marketplace.getMyActivity({
-        me: account?.toLowerCase(),
-      }),
-    { enabled: !!account, refetchInterval: 30_000 }
-  );
-
-  const getOrderedActivity = () => {
-    const combinedAcivity: ListingFieldsFragment[] = [];
-
-    myActivity.data?.bought
-      ? combinedAcivity.push(...myActivity.data.bought)
-      : null;
-    myActivity.data?.sold
-      ? combinedAcivity.push(...myActivity.data.sold)
-      : null;
-
-    return combinedAcivity.sort((a, b) => {
-      if (sortParam === "price") return b.pricePerItem - a.pricePerItem;
-      return b.blockTimestamp - a.blockTimestamp;
-    });
-  };
 
   const allCollections = useCollections();
   const filters = useFilters();
@@ -988,11 +959,7 @@ const Inventory = () => {
                     </div>
                   )}
                   {section == "activity" ? (
-                    <Listings
-                      listings={getOrderedActivity()}
-                      sort={sortParam}
-                      includeStatus={true}
-                    />
+                    <Activity includeStatus />
                   ) : (
                     <section className="mt-8 pb-16">
                       {inventory.isLoading && (
