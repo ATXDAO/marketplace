@@ -38,10 +38,11 @@ export const formatPercent = (percentage: string) => {
   return toFixed(number * 100, 2) + "%";
 };
 
-export const abbreviatePrice = (number: string) => {
+export const abbreviatePrice = (number: string | number) => {
   if (!number) return 0;
 
-  let formatted_number = parseFloat(formatEther(number));
+  let formatted_number =
+    typeof number === "number" ? number : parseFloat(formatEther(number));
   let unit_index = 0;
 
   while (Math.floor(formatted_number / 1000.0) >= 1) {

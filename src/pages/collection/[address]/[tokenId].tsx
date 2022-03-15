@@ -939,6 +939,17 @@ export default function TokenDetail() {
                                   {data.collection?.standard}
                                 </dd>
                               </div>
+                              {data.collection?.standard ===
+                              TokenStandard.ERC1155 ? (
+                                <div className="sm:col-span-1">
+                                  <dt className="text-sm font-medium text-gray-500">
+                                    Items
+                                  </dt>
+                                  <dd className="mt-1 text-sm text-gray-900 dark:text-gray-300">
+                                    {data.collection?.tokens?.[0].stats?.items.toLocaleString()}
+                                  </dd>
+                                </div>
+                              ) : null}
                             </div>
                           </Disclosure.Panel>
                         </>

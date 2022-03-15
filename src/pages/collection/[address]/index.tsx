@@ -165,18 +165,6 @@ const Collection = () => {
     router.replace("/collection/legion-auxiliary");
   }
 
-  const { data: collectionData } = useQuery(
-    ["collection-info", formattedAddress],
-    () =>
-      marketplace.getCollectionInfo({
-        id: formattedAddress,
-      }),
-    {
-      enabled: !!formattedAddress,
-      refetchInterval: false,
-    }
-  );
-
   const attributeFilterList = useFiltersList();
 
   const { data: statData } = useQuery(
@@ -199,8 +187,7 @@ const Collection = () => {
     return () => Router.events.off("routeChangeComplete", scrollToTop);
   }, []);
 
-  const isERC1155 =
-    collectionData?.collection?.standard === TokenStandard.ERC1155;
+  const isERC1155 = statData?.collection?.standard === TokenStandard.ERC1155;
 
   // First get all possible listed tokens
   const listedTokens = useQuery(
@@ -572,16 +559,16 @@ const Collection = () => {
       <MobileFiltersWrapper />
       <div className="mx-auto px-4 sm:px-6 lg:px-8 pt-24">
         <div className="py-24 flex flex-col items-center">
-          {collectionData?.collection && statData?.collection ? (
+          {statData?.collection ? (
             <>
-              <h1 className="text-xl md:text-5xl sm:text-3xl font-extrabold tracking-tight text-gray-900 dark:text-gray-100">
-                {statData.collection.name}
+              <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight text-gray-900 dark:text-gray-100">
+                {collectionName}
               </h1>
               {generateDescription(collectionName)}
-              <div className="mt-12 overflow-hidden flex flex-col">
-                <dl className="sm:-mx-8 -mt-8 flex divide-x-2">
-                  <div className="flex flex-col px-6 sm:px-8 pt-8">
-                    <dt className="order-2 text-[0.4rem] sm:text-base font-medium text-gray-500 dark:text-gray-400 mt-2 sm:mt-4 flex">
+              <div className="mt-12 overflow-hidden relative">
+                <dl className="-mx-4 -mt-4 md:-mt-8 grid grid-cols-2 md:grid-cols-4 divide-y-2 divide-x-2 md:divide-y-0">
+                  <div className="flex flex-col px-6 sm:px-8 py-4 md:pb-0 md:pt-8">
+                    <dt className="order-2 font-medium text-gray-500 dark:text-gray-400 mt-4 flex">
                       <span className="capsize">Floor Price</span>
                       <button
                         className="inline-flex self-end items-center ml-2"
@@ -591,58 +578,75 @@ const Collection = () => {
                           )
                         }
                       >
-                        <SwapIcon className="h-[0.6rem] w-[0.6rem] sm:h-4 sm:w-4" />
+                        <SwapIcon className="h-4 w-4" />
                         {floorCurrency === "eth" ? (
-                          <MagicIcon className="h-[0.6rem] w-[0.6rem] sm:h-4 sm:w-4" />
+                          <MagicIcon className="h-4 w-4" />
                         ) : (
-                          <EthIcon className="h-[0.6rem] w-[0.6rem] sm:h-4 sm:w-4" />
+                          <EthIcon className="h-4 w-4" />
                         )}
                       </button>
                     </dt>
-                    <dd className="order-1 text-base font-extrabold text-red-600 dark:text-gray-200 sm:text-3xl flex">
+                    <dd className="order-1 font-extrabold text-red-600 dark:text-gray-200 text-3xl flex">
                       {floorCurrency === "eth" ? (
-                        <EthIcon className="h-[0.6rem] w-[0.6rem] sm:h-4 sm:w-4 self-end mr-2" />
+                        <EthIcon className="h-4 w-4 self-end mr-2" />
                       ) : (
-                        <MagicIcon className="h-[0.6rem] w-[0.6rem] sm:h-4 sm:w-4 self-end mr-2" />
+                        <MagicIcon className="h-4 w-4 self-end mr-2" />
                       )}
                       <span className="capsize">
                         {floorCurrency === "eth"
                           ? formatNumber(
                               Number(
                                 parseFloat(
-                                  formatEther(statData.collection.floorPrice)
+                                  formatEther(
+                                    statData.collection.stats.floorPrice
+                                  )
                                 )
                               ) * parseFloat(ethPrice)
                             )
-                          : formatPrice(statData.collection.floorPrice)}{" "}
+                          : formatPrice(
+                              statData.collection.stats.floorPrice
+                            )}{" "}
                       </span>
                     </dd>
+                    {isERC1155 &&
+                      (listings.data?.pages?.[0].tokens?.length ?? 0) > 12 && (
+                        <button
+                          className="order-3 text-xs block underline place-self-start mt-2 dark:text-gray-300"
+                          onClick={() => setDetailedFloorPriceModalOpen(true)}
+                        >
+                          Compare floor prices &gt;
+                        </button>
+                      )}
                   </div>
-                  <div className="flex flex-col px-6 sm:px-8 pt-8">
-                    <dt className="order-2 text-[0.4rem] sm:text-base font-medium text-gray-500 dark:text-gray-400 mt-2 sm:mt-4">
+                  <div className="flex flex-col px-6 sm:px-8 py-4 md:pb-0 md:pt-8">
+                    <dt className="order-2 text-base font-medium text-gray-500 dark:text-gray-400 mt-4">
                       Total Listings
                     </dt>
-                    <dd className="order-1 text-base font-extrabold text-red-600 dark:text-gray-200 sm:text-3xl capsize">
-                      {formatNumber(statData.collection.totalListings)}
+                    <dd className="order-1 font-extrabold text-red-600 dark:text-gray-200 text-3xl capsize">
+                      {formatNumber(statData.collection.stats.listings)}
                     </dd>
                   </div>
-                  <div className="flex flex-col px-6 sm:px-8 pt-8">
-                    <dt className="order-2 text-[0.4rem] sm:text-base font-medium text-gray-500 dark:text-gray-400 mt-2 sm:mt-4">
+                  <div
+                    aria-hidden="true"
+                    className="md:hidden absolute top-[calc(50%-1.5rem)] left-[calc(50%-1rem)] !border-0 bg-white h-8 w-8"
+                  />
+                  <div className="flex flex-col px-6 sm:px-8 py-4 md:pb-0 md:pt-8 -ml-1 md:ml-0">
+                    <dt className="order-2 text-base font-medium text-gray-500 dark:text-gray-400 mt-4">
                       Volume ($MAGIC)
                     </dt>
-                    <dd className="order-1 text-base font-extrabold text-red-600 dark:text-gray-200 sm:text-3xl capsize">
-                      {abbreviatePrice(statData.collection.totalVolume)}
+                    <dd className="order-1 font-extrabold text-red-600 dark:text-gray-200 text-3xl capsize">
+                      {abbreviatePrice(statData.collection.stats.volume)}
+                    </dd>
+                  </div>
+                  <div className="flex flex-col px-6 sm:px-8 py-4 md:pb-0 md:pt-8">
+                    <dt className="order-2 text-base font-medium text-gray-500 dark:text-gray-400 mt-4">
+                      Items
+                    </dt>
+                    <dd className="order-1 font-extrabold text-red-600 dark:text-gray-200 text-3xl capsize">
+                      {abbreviatePrice(statData.collection.stats.items)}
                     </dd>
                   </div>
                 </dl>
-                {isERC1155 && statData.collection.totalListings > 0 && (
-                  <button
-                    className="ml-6 sm:ml-0 text-[0.4rem] sm:text-xs block underline place-self-start mt-2 dark:text-gray-300"
-                    onClick={() => setDetailedFloorPriceModalOpen(true)}
-                  >
-                    Compare floor prices &gt;
-                  </button>
-                )}
               </div>
             </>
           ) : (
@@ -812,10 +816,10 @@ const Collection = () => {
                   </h3>
                 </div>
               ) : null}
-              {collectionData && !isLoading ? (
+              {!isLoading ? (
                 <section aria-labelledby="products-heading" className="my-8">
                   <h2 id="products-heading" className="sr-only">
-                    {collectionData.collection?.name}
+                    {collectionName}
                   </h2>
                   <ul
                     role="list"

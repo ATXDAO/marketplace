@@ -50,29 +50,22 @@ export const getUserInventory = gql`
   }
 `;
 
-export const getCollectionInfo = gql`
-  query getCollectionInfo($id: ID!) {
-    collection(id: $id) {
-      id
-      name
-      standard
-    }
-  }
-`;
-
 export const getCollectionStats = gql`
   query getCollectionStats($id: ID!) {
     collection(id: $id) {
-      name
-      floorPrice
-      totalListings
-      totalVolume
-      listings(where: { status: Active, quantity_gt: 0 }) {
+      listings(where: { status: Active }) {
         token {
           floorPrice
           tokenId
           name
         }
+      }
+      standard
+      stats {
+        floorPrice
+        listings
+        items
+        volume
       }
     }
   }
@@ -251,6 +244,9 @@ export const getTokenDetails = gql`
       tokens(where: { tokenId: $tokenId }) {
         id
         tokenId
+        stats {
+          items
+        }
         lowestPrice: listings(
           where: { status: Active, quantity_gt: 0 }
           first: 1
