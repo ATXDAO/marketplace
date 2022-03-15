@@ -193,7 +193,7 @@ export function useFiltersList() {
             acc.push({ name, value, percentage: null });
           });
 
-          return acc;
+          return acc.sort((left, right) => left.name.localeCompare(right.name));
         }, []),
     }
   );
@@ -227,6 +227,20 @@ export function useFiltersList() {
         };
       case collectionName.startsWith("Legion"):
         return {
+          "Atlas Mine Boost": BOOST.map((value) => ({
+            value: formatPercent(value),
+            percentage: null,
+          })),
+          "Crafting Level": LEVELS.map((value) => ({
+            value,
+            percentage: null,
+          })),
+          "Crafting XP": XPS.map((value) => ({ value, percentage: null })),
+          "Questing Level": LEVELS.map((value) => ({
+            value,
+            percentage: null,
+          })),
+          "Questing XP": XPS.map((value) => ({ value, percentage: null })),
           Role: (collectionName.includes("Genesis") ? ROLES : AUX_ROLES).map(
             (value) => ({ value, percentage: null })
           ),
@@ -245,20 +259,6 @@ export function useFiltersList() {
             value,
             percentage: null,
           })),
-          "Atlas Mine Boost": BOOST.map((value) => ({
-            value: formatPercent(value),
-            percentage: null,
-          })),
-          "Crafting Level": LEVELS.map((value) => ({
-            value,
-            percentage: null,
-          })),
-          "Crafting XP": XPS.map((value) => ({ value, percentage: null })),
-          "Questing Level": LEVELS.map((value) => ({
-            value,
-            percentage: null,
-          })),
-          "Questing XP": XPS.map((value) => ({ value, percentage: null })),
         };
       case isBattleflyItem:
         return reduceAttributes(battleflyAttributes.data);
@@ -294,12 +294,8 @@ export function Filters() {
         {Object.keys(attributeFilterList).map(
           (attributeKey: keyof typeof attributeFilterList) => {
             const attributes = attributeFilterList[attributeKey]?.sort(
-              (
-                left: { percentage: string | null },
-                right: { percentage: string | null }
-              ) =>
-                parseFloat(left.percentage ?? "0") -
-                parseFloat(right.percentage ?? "0")
+              (left: { value: string }, right: { value: string }) =>
+                left.value.localeCompare(right.value)
             );
 
             if ((attributes?.length ?? 0) === 0) {
