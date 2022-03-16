@@ -10,7 +10,7 @@ import {
 } from "react";
 import { Dialog, Transition, Listbox } from "@headlessui/react";
 import { XIcon } from "@heroicons/react/outline";
-import { SelectorIcon, CheckIcon } from "@heroicons/react/solid";
+import { SelectorIcon, CheckIcon, ViewGridIcon } from "@heroicons/react/solid";
 import { ExclamationIcon } from "@heroicons/react/outline";
 import classNames from "clsx";
 import { bridgeworld, client, marketplace, smolverse } from "../../lib/client";
@@ -49,6 +49,7 @@ import {
   useFilters,
   useFiltersList,
 } from "../../components/Filters";
+import LargeGridIcon from "../../components/LargeGridIcon";
 
 type DrawerProps = {
   actions: Array<"create" | "remove" | "update">;
@@ -690,6 +691,7 @@ const Drawer = ({
 const Inventory = () => {
   const router = useRouter();
   const [nft, setNft] = useState<Nft | null>(null);
+  const [toggleGrid, setToggleGrid] = useState(false);
   const { account } = useEthers();
   const [section] = router.query.section ?? [""];
 
@@ -881,7 +883,7 @@ const Inventory = () => {
       <div className="flex-1 flex flex-col overflow-hidden pt-24">
         <div className="flex-1 flex items-stretch overflow-hidden">
           <main className="flex-1 overflow-y-auto">
-            <div className="pt-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="pt-8 mx-auto px-4 sm:px-6 lg:px-8">
               <h1 className="flex-1 text-2xl font-bold text-gray-900 dark:text-gray-200">
                 Inventory
               </h1>
@@ -914,7 +916,25 @@ const Inventory = () => {
                         );
                       })}
                     </nav>
-                    {section === "" ? <MobileFilterButton /> : null}
+                    {section === "" ? (
+                      <>
+                        <MobileFilterButton />
+                        <button
+                          type="button"
+                          className="hidden lg:p-2 lg:m-2 lg:text-gray-400 lg:hover:text-gray-500 lg:flex"
+                          onClick={() => setToggleGrid(!toggleGrid)}
+                        >
+                          {toggleGrid ? (
+                            <LargeGridIcon aria-hidden="true" />
+                          ) : (
+                            <ViewGridIcon
+                              className="w-5 h-5"
+                              aria-hidden="true"
+                            />
+                          )}
+                        </button>
+                      </>
+                    ) : null}
                   </div>
                 </div>
               </div>
@@ -978,7 +998,14 @@ const Inventory = () => {
                       {data.length > 0 && (
                         <ul
                           role="list"
-                          className="grid grid-cols-1 gap-y-10 sm:grid-cols-2 gap-x-6 lg:grid-cols-4 xl:gap-x-8"
+                          className={classNames(
+                            "grid grid-cols-1 gap-y-10 sm:grid-cols-2 gap-x-6 xl:gap-x-8",
+                            section === ""
+                              ? toggleGrid
+                                ? "lg:grid-cols-6"
+                                : "lg:grid-cols-4"
+                              : ""
+                          )}
                         >
                           {data.map(({ id, quantity, token, ...item }) => {
                             const { slug = "" } =
