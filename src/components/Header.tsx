@@ -254,7 +254,13 @@ const Header = () => {
                 </button>
               </div>
               <div className="py-6 px-4 space-y-6 flex-1">
-                <div className="border-b border-gray-200 dark:border-gray-500 py-4">
+                <button
+                  className="flow-root"
+                  onClick={() => setIsOpenWalletModal(true)}
+                >
+                  Connect Wallet
+                </button>
+                <div className="border-b border-gray-200 dark:border-gray-500 pb-4">
                   <button
                     className="flow-root"
                     onClick={() => {
@@ -366,7 +372,7 @@ const Header = () => {
                         </div>
                       ) : (
                         <button
-                          className="mx-2 inline-flex items-center px-3 py-2 sm:px-4 sm:py-2 border border-red-300 dark:border-gray-500 rounded text-xs md:text-sm font-bold text-white dark:text-gray-300 bg-red-500 dark:bg-gray-800 hover:bg-red-600 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 dark:focus:ring-gray-700"
+                          className="mx-2 hidden sm:inline-flex items-center px-3 py-2 sm:px-4 sm:py-2 border border-red-300 dark:border-gray-500 rounded text-xs md:text-sm font-bold text-white dark:text-gray-300 bg-red-500 dark:bg-gray-800 hover:bg-red-600 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 dark:focus:ring-gray-700"
                           onClick={() => setIsOpenWalletModal(true)}
                         >
                           Connect Wallet

@@ -636,7 +636,7 @@ const Collection = () => {
                   </div>
                   <div
                     aria-hidden="true"
-                    className="md:hidden absolute top-[calc(50%-1.5rem)] left-[calc(50%-1rem)] !border-0 bg-white h-8 w-8"
+                    className="md:hidden absolute top-[calc(50%-1.5rem)] left-[calc(50%-1rem)] !border-0 bg-white dark:bg-gray-900 h-8 w-8"
                   />
                   <div className="flex flex-col px-6 sm:px-8 py-4 md:pb-0 md:pt-8 -ml-1 md:ml-0">
                     <dt className="order-2 text-base font-medium text-gray-500 dark:text-gray-400 mt-4">
