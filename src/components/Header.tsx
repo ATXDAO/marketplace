@@ -33,6 +33,7 @@ import { WalletLinkConnector } from "@web3-react/walletlink-connector";
 import { useDebounce } from "use-debounce";
 import { useQuery } from "react-query";
 import { marketplace } from "../lib/client";
+import { HomeIcon } from "@heroicons/react/outline";
 import { InboxIcon } from "@heroicons/react/solid";
 
 const NEW_COLLECTIONS = [
@@ -263,12 +264,21 @@ const Header = () => {
                 </button>
               </div>
               <div className="py-6 px-4 space-y-6 flex-1">
-                <button
-                  className="flow-root"
-                  onClick={() => setIsOpenWalletModal(true)}
-                >
-                  Connect Wallet
-                </button>
+                <div className="flow-root">
+                  <Link href="/" passHref>
+                    <a className="-m-2 p-2 block font-medium text-gray-900 dark:text-gray-200">
+                      Home
+                    </a>
+                  </Link>
+                </div>
+                {!account ? (
+                  <button
+                    className="flow-root"
+                    onClick={() => setIsOpenWalletModal(true)}
+                  >
+                    Connect Wallet
+                  </button>
+                ) : null}
                 <div className="border-b border-gray-200 dark:border-gray-500 pb-4">
                   <button
                     className="flow-root"
@@ -279,13 +289,6 @@ const Header = () => {
                   >
                     Purchase $MAGIC
                   </button>
-                </div>
-                <div className="flow-root">
-                  <Link href="/" passHref>
-                    <a className="-m-2 p-2 block font-medium text-gray-900 dark:text-gray-200">
-                      Explore
-                    </a>
-                  </Link>
                 </div>
                 <div className="flow-root">
                   <Link href="/activity" passHref>
@@ -330,6 +333,14 @@ const Header = () => {
                       <span className="sr-only">Open menu</span>
                       <MenuIcon className="h-6 w-6" aria-hidden="true" />
                     </button>
+                  </div>
+                  <div className="hidden lg:flex items-center mr-4">
+                    <Link href="/" passHref>
+                      <a className="hover:text-gray-900 text-gray-500 dark:hover:text-gray-200">
+                        <span className="sr-only">Home</span>
+                        <HomeIcon className="h-6 w-6" />
+                      </a>
+                    </Link>
                   </div>
                   <div className="h-full flex flex-1 items-center">
                     <div className="bottom-0 inset-x-0 flex-1">
