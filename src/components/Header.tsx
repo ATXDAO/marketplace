@@ -69,6 +69,8 @@ const Header = () => {
   const [searchValue, setSearchValue] = useState("");
   const [search] = useDebounce(searchValue, 300);
 
+  const allCollections = useCollections();
+
   const query = useQuery(
     ["search", search],
     () => {
@@ -81,7 +83,15 @@ const Header = () => {
       enabled: !!search,
       refetchInterval: false,
       select: (data) => {
-        const collections = [...data.lowerCollections, ...data.startCollections]
+        const collections = [
+          ...data.lowerCollections,
+          ...data.startCollections,
+          ...allCollections
+            .filter((collection) =>
+              collection.name.toLowerCase().includes(search.toLowerCase())
+            )
+            .map(({ name }) => ({ name })),
+        ]
           .filter(
             (collection, index, array) =>
               array.findIndex((item) => item.name === collection.name) === index
@@ -170,9 +180,8 @@ const Header = () => {
 
   const onClose = () => setIsOpenWalletModal(false);
 
-  const data = useCollections();
   const collectionName =
-    data.find((item) => item.address === address)?.name ?? "";
+    allCollections.find((item) => item.address === address)?.name ?? "";
 
   const showBwWarning = [
     "Unpilgrimaged Legion Auxiliary",
