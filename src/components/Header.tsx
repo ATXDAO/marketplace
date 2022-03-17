@@ -334,7 +334,30 @@ const Header = () => {
                   <div className="h-full flex flex-1 items-center">
                     <div className="bottom-0 inset-x-0 flex-1">
                       <SearchAutocomplete
-                        {...(query.data ?? { children: [] })}
+                        {...(query.data ?? {
+                          children: (
+                            <Section key="collections" title="Collections">
+                              {allCollections.map((collection) => {
+                                const key = `/collection/${getCollectionSlugFromName(
+                                  collection.name
+                                )}`;
+
+                                return (
+                                  <Item key={key}>
+                                    {collection.name}
+                                    {NEW_COLLECTIONS.includes(
+                                      collection.name
+                                    ) ? (
+                                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                        New
+                                      </span>
+                                    ) : null}
+                                  </Item>
+                                );
+                              })}
+                            </Section>
+                          ),
+                        })}
                         isLoading={query.isLoading}
                         label="Search items or collections"
                         placeholder="Search items or collections"
