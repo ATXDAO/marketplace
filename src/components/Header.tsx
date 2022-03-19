@@ -33,8 +33,8 @@ import { WalletLinkConnector } from "@web3-react/walletlink-connector";
 import { useDebounce } from "use-debounce";
 import { useQuery } from "react-query";
 import { marketplace } from "../lib/client";
-import { HomeIcon } from "@heroicons/react/outline";
 import { InboxIcon } from "@heroicons/react/solid";
+import { TreasureIcon } from "./Icons";
 
 const NEW_COLLECTIONS = [
   "BattleFly",
@@ -336,9 +336,9 @@ const Header = () => {
                   </div>
                   <div className="hidden lg:flex items-center mr-4">
                     <Link href="/" passHref>
-                      <a className="hover:text-gray-900 text-gray-500 dark:hover:text-gray-200">
+                      <a className="hover:text-gray-900 text-gray-500 dark:hover:text-red-500">
                         <span className="sr-only">Home</span>
-                        <HomeIcon className="h-6 w-6" />
+                        <TreasureIcon />
                       </a>
                     </Link>
                   </div>
