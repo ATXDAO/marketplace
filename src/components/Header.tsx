@@ -38,7 +38,7 @@ import { InboxIcon } from "@heroicons/react/solid";
 
 const NEW_COLLECTIONS = [
   "BattleFly",
-  "BattleFly v1 Founders NFT",
+  "BattleFly v2 Founders NFT",
   "Smol Treasures",
 ];
 
