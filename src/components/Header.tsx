@@ -37,8 +37,10 @@ import { InboxIcon } from "@heroicons/react/solid";
 import { TreasureIcon } from "./Icons";
 
 const NEW_COLLECTIONS = [
+  "Balancer Crystal",
   "BattleFly",
   "BattleFly v2 Founders NFT",
+  "Peek-A-Boo",
   "Smol Treasures",
 ];
 
