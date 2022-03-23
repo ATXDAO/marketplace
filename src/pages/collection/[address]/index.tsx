@@ -536,51 +536,59 @@ const Collection = () => {
     }
   );
 
+  const listingIds = React.useMemo(
+    () =>
+      listings.data?.pages
+        .map((page) => page.listings?.map((listing) => listing.token.id) ?? [])
+        .flat() ?? [],
+    [listings.data?.pages]
+  );
+
   const legacyMetadata = useQuery(
-    ["metadata", tokenIds],
-    () => client.getCollectionMetadata({ ids: tokenIds ?? [] }),
+    ["metadata", listingIds],
+    () => client.getCollectionMetadata({ ids: listingIds }),
     {
-      enabled: !!tokenIds && !isBridgeworldItem && !isSmolverseItem,
+      enabled: !!listingIds && !isBridgeworldItem && !isSmolverseItem,
       refetchInterval: false,
       keepPreviousData: true,
     }
   );
 
   const bridgeworldMetadata = useQuery(
-    ["bw-metadata", tokenIds],
-    () => bridgeworld.getBridgeworldMetadata({ ids: tokenIds ?? [] }),
+    ["bw-metadata", listingIds],
+    () => bridgeworld.getBridgeworldMetadata({ ids: listingIds }),
     {
-      enabled: !!tokenIds && isBridgeworldItem,
+      enabled: !!listingIds && isBridgeworldItem,
       refetchInterval: false,
       keepPreviousData: true,
     }
   );
 
   const smolverseMetadata = useQuery(
-    ["sv-metadata", tokenIds],
-    () => smolverse.getSmolverseMetadata({ ids: tokenIds ?? [] }),
+    ["sv-metadata", listingIds],
+    () => smolverse.getSmolverseMetadata({ ids: listingIds }),
     {
-      enabled: !!tokenIds && isSmolverseItem,
+      enabled: !!listingIds && isSmolverseItem,
       refetchInterval: false,
       keepPreviousData: true,
     }
   );
 
   const peekabooMetadata = useQuery(
-    ["peekaboo-metadata", tokenIds],
-    () => peekaboo.getPeekABooMetadata({ ids: tokenIds ?? [] }),
+    ["peekaboo-metadata", listingIds],
+    () => peekaboo.getPeekABooMetadata({ ids: listingIds }),
     {
-      enabled: !!tokenIds && isPeekABoo,
+      enabled: !!listingIds && isPeekABoo,
       refetchInterval: false,
       keepPreviousData: true,
     }
   );
 
   const battleflyMetadata = useBattleflyMetadata(
-    isBattleflyItem ? tokenIds ?? [] : []
+    isBattleflyItem ? listingIds : []
   );
   const foundersMetadata = useFoundersMetadata(
-    isFoundersItem ? tokenIds ?? [] : []
+    isFoundersItem ? listingIds : []
   );
 
   const isLoading = React.useMemo(
