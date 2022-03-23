@@ -540,7 +540,12 @@ const Collection = () => {
   const listingIds = React.useMemo(
     () =>
       listings.data?.pages
-        .map((page) => page.listings?.map((listing) => listing.token.id) ?? [])
+        .map(
+          (page) =>
+            page.listings?.map((listing) => listing.token.id) ??
+            page.tokens?.map((token) => token.id) ??
+            []
+        )
         .flat() ?? [],
     [listings.data?.pages]
   );
