@@ -404,6 +404,7 @@ const Collection = () => {
     () =>
       peekaboo.getFilteredPeekABoos({
         attributeIds: attributeIds.map((id) => id.replace(/ /g, "-")),
+        tokenIds: listedTokens.data ?? [],
       }),
     {
       enabled:

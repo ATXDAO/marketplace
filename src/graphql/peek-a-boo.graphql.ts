@@ -27,10 +27,10 @@ export const getPeekABooMetadata = gql`
 `;
 
 export const getFilteredPeekABoos = gql`
-  query getFilteredPeekABoos($attributeIds: [ID!]!) {
+  query getFilteredPeekABoos($attributeIds: [ID!]!, $tokenIds: [ID!]!) {
     attributes(where: { id_in: $attributeIds }) {
       id
-      tokens {
+      tokens(first: 1000, where: { id_in: $tokenIds }) {
         id
       }
     }
