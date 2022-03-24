@@ -15,15 +15,15 @@ const collections = [
   {
     href: "legion-genesis",
     name: "Legion Genesis",
-    image: "/img/All-Class14.png",
+    image: "/img/Warlock.png",
     description: "The Origin Legions of Bridgeworld with a fixed supply.",
   },
   {
-    href: "treasures",
-    name: "Treasures",
-    image: "/img/Honeycomb.gif",
+    href: "peek-a-boo",
+    name: "Peek-A-Boo",
+    image: "/img/peekaboo.svg",
     description:
-      "Treasures are composable building blocks in Bridgeworld that will be used inter- and intra-metaverse.",
+      "Peek-A-Boo is a collection of 10,000 adorable NFTs. There are two types, Ghosts and Busters.",
   },
   {
     href: "smol-bodies",
@@ -34,20 +34,12 @@ const collections = [
       "The Smol Bodies inhabit a gym near you, stacking $plates to earn muscle and be not smol.",
   },
   {
-    href: "seed-of-life",
-    name: "Seed of Life",
+    href: "legion-auxiliary",
+    name: "Legion Auxiliary",
     image:
-      "https://ipfs.io/ipfs/QmbkpUo9dPsTVDfttdgkV6eqbPLCXyoKhFBxhwdAgqB15z/Seed of Life 1.png",
+      "https://ipfs.io/ipfs/QmTxcMUqVvrHMrdLUqtSjFSbHZ4ZoQ2bUB6U7CEpA7JDiF/Uncommon Fighter.gif",
     description:
-      "Built atop the Magic ecosystem, Life embodies the metaverse as a living breathing ecosystem...",
-  },
-  {
-    href: "smol-treasures",
-    name: "Smol Treasures",
-    image:
-      "https://ipfs.io/ipfs/QmZK1i4y7qn7Fi7mEMgT4KZcb1Etb12yndcTZ5dnhigDPt/2.gif",
-    description:
-      "Smols and Swols are currently farming Smol treasures on the moon.",
+      "Descendants of Genesis Legions that can be summoned in Bridgeworld.",
   },
   {
     href: "smol-brains",
@@ -58,20 +50,51 @@ const collections = [
       "The Smol Brains are a dynamic PFP of a monkey whose head gets bigger the larger its IQ becomes.",
   },
   {
+    href: "smol-brains-pets",
+    name: "Smol Brains Pets",
+    image:
+      "https://ipfs.io/ipfs/QmdRyjjv6suTcS9E1aNnKRhvL2McYynrzLbg5VwXH8cCQB/614.gif",
+    description:
+      "The Smol Brains Pets are cute companions to accompany your Smol Brain in Smolverse.",
+  },
+  {
+    href: "seed-of-life",
+    name: "Seed of Life",
+    image:
+      "https://ipfs.io/ipfs/QmbkpUo9dPsTVDfttdgkV6eqbPLCXyoKhFBxhwdAgqB15z/Seed of Life 1.png",
+    description:
+      "Built atop the Magic ecosystem, Life embodies the metaverse as a living breathing ecosystem...",
+  },
+  {
+    href: "smol-cars",
+    name: "Smol Cars",
+    image:
+      "https://ipfs.io/ipfs/QmVjjJJ7XQKRbM5uBmDtTP9r22UZC1Wv55AT9p4yGecHpP/30.png",
+    description:
+      "The Smol Cars are here to get you around in Smolverse. Vroom vroom.",
+  },
+  {
+    href: "treasures",
+    name: "Treasures",
+    image: "/img/Honeycomb.gif",
+    description:
+      "Treasures are composable building blocks in Bridgeworld that will be used inter- and intra-metaverse.",
+  },
+  {
+    href: "smol-treasures",
+    name: "Smol Treasures",
+    image:
+      "https://ipfs.io/ipfs/QmZK1i4y7qn7Fi7mEMgT4KZcb1Etb12yndcTZ5dnhigDPt/2.gif",
+    description:
+      "Smols and Swols are currently farming Smol treasures on the moon.",
+  },
+  {
     href: "consumables",
     name: "Consumables",
     image:
       "https://ipfs.io/ipfs/QmdpMJMTRrGu1Z43RF94WnDRj5QwiLJXo43TwKWPX2cTWE/Medium Prism.gif",
     description:
       "Functional items that are crafted from Treasures and give utility in the Metaverse.",
-  },
-  {
-    href: "legion-auxiliary",
-    name: "Legion Auxiliary",
-    image:
-      "https://ipfs.io/ipfs/QmTxcMUqVvrHMrdLUqtSjFSbHZ4ZoQ2bUB6U7CEpA7JDiF/Uncommon Fighter.gif",
-    description:
-      "Descendants of Genesis Legions that can be summoned in Bridgeworld.",
   },
 ];
 
@@ -103,13 +126,9 @@ export default function Home() {
                 key={product.href}
                 className="group relative bg-white dark:bg-gray-500 border border-gray-200 dark:border-gray-600 rounded-lg flex flex-col overflow-hidden"
               >
-                <div className="relative aspect-w-3 aspect-h-4 bg-gray-200 group-hover:opacity-75 sm:aspect-none sm:h-96">
+                <div className="relative aspect-w-3 aspect-h-3 bg-gray-200 group-hover:opacity-75 sm:aspect-none">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={product.image}
-                    alt={product.name}
-                    className="w-full h-full object-center object-cover sm:w-full sm:h-full"
-                  />
+                  <img src={product.image} alt={product.name} />
                 </div>
                 <div className="flex-1 p-4 space-y-2 flex flex-col">
                   <h3 className="text-sm font-medium text-gray-900 dark:text-gray-50">
