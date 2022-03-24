@@ -50,6 +50,10 @@ export function normalizeBridgeworldTokenMetadata(
     attributes: [],
   };
 
+  if (token.name === "Balancer Crystal") {
+    tokenMetadata.description = "Crystal";
+  }
+
   if (metadata?.__typename === "ConsumableInfo") {
     tokenMetadata.description = "Consumables";
     tokenMetadata.attributes = [
