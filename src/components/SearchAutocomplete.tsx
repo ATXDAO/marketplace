@@ -163,15 +163,19 @@ interface Props<T> extends ComboBoxProps<T> {
 }
 
 export function SearchAutocomplete<T extends object>(props: Props<T>) {
+  const inputRef = React.useRef<HTMLInputElement | null>(null);
+  const listBoxRef = React.useRef(null);
+  const popoverRef = React.useRef(null);
+
   const state = useComboBoxState({
     ...props,
     allowsEmptyCollection: true,
     menuTrigger: "focus",
+    onSelectionChange: (key) => {
+      props.onSelectionChange?.(key);
+      inputRef.current?.blur();
+    },
   });
-
-  const inputRef = React.useRef(null);
-  const listBoxRef = React.useRef(null);
-  const popoverRef = React.useRef(null);
 
   const { inputProps, listBoxProps } = useComboBox(
     {
