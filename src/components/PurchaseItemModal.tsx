@@ -6,7 +6,7 @@ import { useMagic } from "../context/magicContext";
 import ImageWrapper from "./ImageWrapper";
 import { Modal } from "./Modal";
 import { Contracts } from "../const";
-import { TokenStandard } from "../../generated/graphql";
+import { TokenStandard } from "../../generated/marketplace.graphql";
 import Button from "./Button";
 import { formatEther } from "ethers/lib/utils";
 import { BigNumber } from "@ethersproject/bignumber";
