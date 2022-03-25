@@ -563,14 +563,17 @@ function useBattleflyApi(key: "bf" | "founders", input: string[]) {
               id: input.find((item) =>
                 item.endsWith(`-0x${value.tokenId?.toString(16)}`)
               ),
-              name: [
-                data.attributes.find(
-                  ({ attribute }) => attribute.name === "Edition"
-                )?.attribute.value,
-                value.name,
-              ]
-                .filter(Boolean)
-                .join(" "),
+              name:
+                value.name === "Cocoon"
+                  ? [
+                      data.attributes.find(
+                        ({ attribute }) => attribute.name === "Edition"
+                      )?.attribute.value,
+                      value.name,
+                    ]
+                      .filter(Boolean)
+                      .join(" ")
+                  : value.name,
             };
           }),
         [input]
