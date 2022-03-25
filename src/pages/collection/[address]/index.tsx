@@ -46,6 +46,8 @@ import {
   useFiltersList,
 } from "../../../components/Filters";
 import { SortMenu } from "../../../components/SortMenu";
+import { targetNftT } from "../../../types";
+import { PurchaseItemModal } from "../../../components/PurchaseItemModal";
 
 const MAX_ITEMS_PER_PAGE = 42;
 
@@ -145,13 +147,23 @@ const Collection = () => {
   const [searchParams, setSearchParams] = useState("");
   const [isDetailedFloorPriceModalOpen, setDetailedFloorPriceModalOpen] =
     useState(false);
+  const [modalProps, setModalProps] = React.useState<{
+    isOpen: boolean;
+    targetNft: targetNftT | null;
+  }>({
+    isOpen: false,
+    targetNft: null,
+  });
   const [floorCurrency, setFloorCurrency] = useState<"magic" | "eth">("magic");
   const [toggleGrid, setToggleGrid] = useState(false);
   const filters = getInititalFilters(formattedSearch);
   const { ethPrice } = useMagic();
 
-  const { id: formattedAddress, name: collectionName } =
-    useCollection(slugOrAddress);
+  const {
+    id: formattedAddress,
+    name: collectionName,
+    slug,
+  } = useCollection(slugOrAddress);
 
   const formattedTab = tab ? (Array.isArray(tab) ? tab[0] : tab) : "collection";
 
@@ -166,6 +178,11 @@ const Collection = () => {
   if (collectionName === "Legions") {
     router.replace("/collection/legion-auxiliary");
   }
+
+  const closePurchaseModal = React.useCallback(
+    () => setModalProps({ isOpen: false, targetNft: null }),
+    []
+  );
 
   const attributeFilterList = useFiltersList();
 
@@ -847,12 +864,12 @@ const Collection = () => {
                   <ul
                     role="list"
                     className={classNames(
-                      `grid grid-cols-2 gap-y-10 sm:grid-cols-4 lg:grid-cols-${
+                      `grid sm:grid-cols-2 gap-y-10 md:grid-cols-4 2xl:grid-cols-${
                         toggleGrid ? 6 : 4
                       } gap-x-6 xl:gap-x-8`,
                       {
-                        "lg:grid-cols-4": attributeFilterList,
-                        "lg:grid-cols-6": !attributeFilterList,
+                        "2xl:grid-cols-4": attributeFilterList,
+                        "2xl:grid-cols-6": !attributeFilterList,
                       }
                     )}
                   >
@@ -1088,22 +1105,58 @@ const Collection = () => {
                             <li key={listing.id} className="group">
                               <div className="block w-full aspect-w-1 aspect-h-1 rounded-sm overflow-hidden focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-offset-gray-100 focus-within:ring-red-500">
                                 {metadata ? (
-                                  <ImageWrapper
-                                    className="w-full h-full object-center object-fill group-hover:opacity-75"
-                                    token={metadata}
-                                  />
+                                  <>
+                                    <ImageWrapper
+                                      className="w-full h-full object-center object-fill group-hover:opacity-75"
+                                      token={metadata}
+                                    />
+                                    <div
+                                      className="flex flex-col justify-end space-y-2 opacity-0 p-4 group-hover:opacity-100 z-10"
+                                      aria-hidden="true"
+                                    >
+                                      <button
+                                        onClick={() => {
+                                          router.push(
+                                            `/collection/${slugOrAddress}/${listing.token.tokenId}`
+                                          );
+                                        }}
+                                        className="w-full bg-white bg-opacity-75 backdrop-filter backdrop-blur py-2 px-4 rounded-md text-sm font-medium text-gray-900 text-center"
+                                      >
+                                        View Details
+                                      </button>
+                                      <button
+                                        onClick={() => {
+                                          setModalProps({
+                                            isOpen: true,
+                                            targetNft: {
+                                              metadata: {
+                                                name: metadata.name ?? "",
+                                                description:
+                                                  metadata.metadata
+                                                    ?.description ?? "",
+                                                image:
+                                                  metadata.metadata?.image ??
+                                                  "",
+                                              },
+                                              payload: {
+                                                ...listing,
+                                                standard: TokenStandard.ERC721,
+                                                tokenId: metadata.tokenId,
+                                              },
+                                              slug,
+                                              collection: collectionName,
+                                            },
+                                          });
+                                        }}
+                                        className="w-full bg-red-500 bg-opacity-75 backdrop-filter backdrop-blur py-2 px-4 rounded-md text-sm font-medium text-white text-center"
+                                      >
+                                        Quick Buy
+                                      </button>
+                                    </div>
+                                  </>
                                 ) : (
                                   <div className="animate-pulse w-full bg-gray-300 h-64 rounded-md m-auto" />
                                 )}
-                                <Link
-                                  href={`/collection/${slugOrAddress}/${listing.token.tokenId}`}
-                                >
-                                  <a className="absolute inset-0 focus:outline-none">
-                                    <span className="sr-only">
-                                      View details for {metadata?.name}
-                                    </span>
-                                  </a>
-                                </Link>
                               </div>
                               <div className="mt-4 font-medium text-gray-900 space-y-2">
                                 <div className="flex justify-between items-center">
@@ -1217,6 +1270,14 @@ const Collection = () => {
           isOpen={true}
           onClose={() => setDetailedFloorPriceModalOpen(false)}
           tokens={listings.data?.pages[0].tokens}
+        />
+      )}
+      {modalProps.isOpen && modalProps.targetNft && (
+        <PurchaseItemModal
+          address={formattedAddress}
+          isOpen={true}
+          onClose={closePurchaseModal}
+          targetNft={modalProps.targetNft}
         />
       )}
     </main>

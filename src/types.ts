@@ -28,7 +28,11 @@ export type NormalizedMetadata = Partial<{
 }>;
 
 export type targetNftT = {
-  metadata: NormalizedMetadata | null;
+  metadata: {
+    image: string;
+    name: string;
+    description: string;
+  } | null;
   payload: ListingFieldsWithTokenFragment & {
     standard: TokenStandard;
     tokenId: string;
