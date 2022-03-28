@@ -15,7 +15,8 @@ const collections = [
   {
     href: "legion-genesis",
     name: "Legion Genesis",
-    image: "/img/Warlock.png",
+    image:
+      "https://ipfs.io/ipfs/QmRqosGZZ6icx6uSDjLuFFMJiWDefZAiAZdpJdBK9BP5S4/Warlock.png",
     description: "The Origin Legions of Bridgeworld with a fixed supply.",
   },
   {
@@ -76,7 +77,8 @@ const collections = [
   {
     href: "treasures",
     name: "Treasures",
-    image: "/img/Honeycomb.gif",
+    image:
+      "https://ipfs.io/ipfs/Qmbyy8EWMzrSTSGG1bDNsYZfvnkcjAFNM5TXJqvsbuY8Dz/Honeycomb.gif",
     description:
       "Treasures are composable building blocks in Bridgeworld that will be used inter- and intra-metaverse.",
   },
@@ -127,8 +129,13 @@ export default function Home() {
                 className="group relative bg-white dark:bg-gray-500 border border-gray-200 dark:border-gray-600 rounded-lg flex flex-col overflow-hidden"
               >
                 <div className="relative aspect-w-3 aspect-h-3 bg-gray-200 group-hover:opacity-75 sm:aspect-none">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={product.image} alt={product.name} />
+                  <Image
+                    src={product.image}
+                    alt={product.name}
+                    layout="responsive"
+                    width={400}
+                    height={400}
+                  />
                 </div>
                 <div className="flex-1 p-4 space-y-2 flex flex-col">
                   <h3 className="text-sm font-medium text-gray-900 dark:text-gray-50">
