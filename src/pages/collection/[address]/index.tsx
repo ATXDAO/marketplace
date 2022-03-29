@@ -1250,11 +1250,11 @@ const Collection = () => {
                             : rlmMetadata
                             ? {
                                 id: rlmMetadata.id,
-                                name: rlmMetadata.name,
+                                name: `${collectionName} #${listing.token.tokenId}`,
                                 tokenId: listing.token.tokenId,
                                 metadata: {
                                   image: "/img/realm.png",
-                                  name: rlmMetadata.name,
+                                  name: `${collectionName} #${listing.token.tokenId}`,
                                   description: collectionName,
                                 },
                               }

@@ -697,7 +697,6 @@ export function useMetadata(
             feature1,
             feature2,
             feature3,
-            name,
             metrics,
             totalStructures: [
               {
@@ -709,9 +708,9 @@ export function useMetadata(
             ],
           } = item;
           const image = "/img/realm.png";
+          const name = `Realm #${item.id}`;
           const id = `${collection.address}-0x${parseInt(item.id, 16)}`;
           const attributes = [
-            { name: "Name", value: name },
             { name: "Feature 1", value: feature1 },
             { name: "Feature 2", value: feature2 },
             { name: "Feature 3", value: feature3 },

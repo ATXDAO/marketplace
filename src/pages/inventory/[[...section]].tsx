@@ -1129,11 +1129,11 @@ const Inventory = () => {
                               : rlmMetadata
                               ? {
                                   id: rlmMetadata.id,
-                                  name: rlmMetadata.name,
+                                  name: `${token.collection.name} #${token.tokenId}`,
                                   tokenId: token.tokenId,
                                   metadata: {
                                     image: "/img/realm.png",
-                                    name: rlmMetadata.name,
+                                    name: `${token.collection.name} #${token.tokenId}`,
                                     description: token.collection.name,
                                   },
                                 }

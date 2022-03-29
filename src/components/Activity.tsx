@@ -396,11 +396,11 @@ export function Activity({ title, includeStatus }: ListingProps) {
                     : rlmMetadata
                     ? {
                         id: rlmMetadata.id,
-                        name: rlmMetadata.name,
+                        name: `${collectionName} #${activity.token.tokenId}`,
                         tokenId: activity.token.tokenId,
                         metadata: {
                           image: "/img/realm.png",
-                          name: rlmMetadata.name,
+                          name: `${collectionName} #${activity.token.tokenId}`,
                           description: collectionName ?? "",
                         },
                       }
@@ -585,11 +585,11 @@ export function Activity({ title, includeStatus }: ListingProps) {
                 : rlmMetadata
                 ? {
                     id: rlmMetadata.id,
-                    name: rlmMetadata.name,
+                    name: `${collectionName} #${activity.token.tokenId}`,
                     tokenId: activity.token.tokenId,
                     metadata: {
                       image: "/img/realm.png",
-                      name: rlmMetadata.name,
+                      name: `${collectionName} #${activity.token.tokenId}`,
                       description: collectionName ?? "",
                     },
                   }

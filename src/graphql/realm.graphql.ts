@@ -4,7 +4,6 @@ export const getRealmMetadata = gql`
   query getRealmMetadata($ids: [ID!]!) {
     realms(first: 1000, where: { id_in: $ids }) {
       id
-      name
       feature1
       feature2
       feature3
