@@ -519,16 +519,18 @@ const Collection = () => {
   );
   const filteredRealmTokens = React.useMemo(
     () => ({
-      data: isRealm
-        ? unique([
-            ...(filteredRealmStructureTokens?.data ?? []),
-            ...(filteredRealmFeaturesTokens?.data ?? []),
-          ])
-        : undefined,
+      data:
+        isRealm && Object.keys(filters).length > 0
+          ? unique([
+              ...(filteredRealmStructureTokens?.data ?? []),
+              ...(filteredRealmFeaturesTokens?.data ?? []),
+            ])
+          : undefined,
     }),
     [
       filteredRealmFeaturesTokens?.data,
       filteredRealmStructureTokens?.data,
+      filters,
       isRealm,
     ]
   );
@@ -577,7 +579,6 @@ const Collection = () => {
       ),
     }
   );
-
   const [erc721Ordering, orderDirection] = (
     typeof router.query.sort === "string"
       ? router.query.sort.split(":")
