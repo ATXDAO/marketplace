@@ -130,7 +130,9 @@ export default async function handler(
               ? "Item Updated!"
               : "Item Sold!",
           thumbnail: {
-            url: image,
+            url: image.startsWith("/img/")
+              ? `https://marketplace.treasure.lol${image}`
+              : image,
           },
           fields: [
             {

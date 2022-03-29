@@ -218,7 +218,10 @@ export function Activity({ title, includeStatus }: ListingProps) {
 
   const { data: realmMetadata } = useQuery(
     ["metadata-realm", realmTokens],
-    () => realm.getRealmMetadata({ ids: realmTokens }),
+    () =>
+      realm.getRealmMetadata({
+        ids: realmTokens.map((item) => `${parseInt(item.slice(45), 16)}`),
+      }),
     {
       enabled: realmTokens.length > 0,
       refetchInterval: false,
