@@ -1162,7 +1162,7 @@ const Collection = () => {
                                 ],
                                 attributes: [
                                   ...Object.entries(
-                                    rlmMetadata.totalStructures[0]
+                                    rlmMetadata.totalStructures[0] ?? []
                                   ).map(([name, value]) => ({
                                     name: name
                                       .replace("total", "")
