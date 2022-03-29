@@ -497,7 +497,7 @@ const Collection = () => {
       realm.getFilteredFeatures({
         ids:
           listedTokens.data?.map((id) => `${parseInt(id.slice(45), 16)}`) ?? [],
-        feature: filters.Feature[0]?.split(",") ?? [],
+        feature: filters.Features[0]?.split(",") ?? [],
       }),
     {
       enabled:
