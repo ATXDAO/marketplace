@@ -52,6 +52,40 @@ import { PurchaseItemModal } from "../../../components/PurchaseItemModal";
 
 const MAX_ITEMS_PER_PAGE = 42;
 
+const generateSubDescription = (collectionName: string): string | null => {
+  const collectionMapper = {
+    BattleFly:
+      "BattleFly is an experimental PVP/P2E strategy game, powered by $MAGIC.",
+    "Legion Genesis": "The Origin Legions of Bridgeworld with a fixed supply.",
+    "Peek-A-Boo":
+      "Peek-A-Boo is a P2E ecosystem having trait customization, unique tokenomics, and competition-focused roadmaps. Our Hide-N-Seek game is the first of many to be onboarded into the Spoopy Metaverse!",
+    "Smol Bodies":
+      "The Smol Bodies inhabit a gym near you, stacking $plates to earn muscle and be not smol.",
+    "Legion Auxiliary":
+      "Descendants of Genesis Legions that can be summoned in Bridgeworld.",
+    "Smol Brains":
+      "The Smol Brains are a dynamic PFP of a monkeywhose head gets bigger the larger its IQ becomes.",
+    "Smol Brains Pets":
+      "The Smol Brains Pets are cute companions to accompany your Smol Brain in Smolverse.",
+    "Seed of Life":
+      "Built atop the Magic ecosystem, Life embodies the metaverse as a living breathing ecosystem...",
+    "Smol Cars":
+      "The Smol Cars are here to get you around in Smolverse. Vroom vroom.",
+    Treasures:
+      "Treasures are composable building blocks in Bridgeworld that will be used inter- and intra-metaverse.",
+    "Smol Treasures":
+      "Smols and Swols are currently farming Smol treasures on the moon.",
+    Consumables:
+      "Functional items that are crafted from Treasures and give utility in the Metaverse.",
+    Realm:
+      "Realm is a decentralized world-building experience. Enjoy $MAGIC emissions and Loot from across the Metaverse.",
+    "Tales of Elleria":
+      "Tales of Elleria is an immersive three-dimensional role-playing GameFi project built on Arbitrum One. Summon heroes, take on assignments, go on quests and epic adventures to battle dangerous monsters earn tremendous rewards.",
+  } as const;
+
+  return collectionMapper[collectionName] ?? null;
+};
+
 const generateDescription = (collectionName: string) => {
   switch (collectionName) {
     case "Unpilgrimaged Legion Genesis":
@@ -752,6 +786,8 @@ const Collection = () => {
     }
   }, [listings, inView]);
 
+  const description = generateSubDescription(collectionName);
+
   return (
     <main>
       <MobileFiltersWrapper />
@@ -762,6 +798,11 @@ const Collection = () => {
               <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight text-gray-900 dark:text-gray-100">
                 {collectionName}
               </h1>
+              {description ? (
+                <p className="mt-8 text-sm md:text-base lg:text-xl text-gray-500 text-center max-w-lg lg:max-w-4xl">
+                  {description}
+                </p>
+              ) : null}
               {generateDescription(collectionName)}
               <div className="mt-12 overflow-hidden relative">
                 <dl className="-mx-4 -mt-4 md:-mt-8 grid grid-cols-2 md:grid-cols-4 divide-y-2 divide-x-2 md:divide-y-0">
