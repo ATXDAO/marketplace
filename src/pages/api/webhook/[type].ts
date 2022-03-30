@@ -34,6 +34,10 @@ const collectionWebhooks = {
     listWebhook: process.env.SMOLBRAINS_LIST_WEBHOOK,
     soldWebhook: process.env.SMOLBRAINS_SOLD_WEBHOOK,
   },
+  "tales-of-elleria": {
+    listWebhook: process.env.TALES_OF_ELLERIA_LIST_WEBHOOK,
+    soldWebhook: process.env.TALES_OF_ELLERIA_SOLD_WEBHOOK,
+  },
 };
 
 function formatUpdate<T>(
