@@ -183,7 +183,7 @@ const Header = () => {
   const onClose = () => setIsOpenWalletModal(false);
 
   const collectionName =
-    allCollections.find((item) => item.address === address)?.name ?? "";
+    allCollections.find((item) => item.slug === address)?.name ?? "";
 
   const showBwWarning = [
     "Unpilgrimaged Legion Auxiliary",
@@ -535,6 +535,27 @@ const Header = () => {
               </div>
             </div>
           )}
+        {collectionName === "Tales of Elleria" ? (
+          <div className="bg-red-600">
+            <div className="py-3 px-3 sm:px-6 lg:px-8">
+              <div className="flex sm:items-center lg:justify-between flex-col space-y-2 sm:space-y-0 sm:flex-row">
+                <div className="flex-1 flex items-center">
+                  <span className="flex p-2 rounded-lg bg-red-800">
+                    <SpeakerphoneIcon
+                      className="h-6 w-6 text-white"
+                      aria-hidden="true"
+                    />
+                  </span>
+                  <p className="ml-3 font-medium text-white">
+                    <span>
+                      Rarity is a display bug. Please double check the stats!
+                    </span>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : null}
       </div>
       <Modal
         title="Convert between ETH and MAGIC"
