@@ -255,7 +255,7 @@ export default function TokenDetail() {
 
   const bridgeworldMetadata = metadataData.bridgeworld?.tokens?.[0];
   const smolverseMetadata = metadataData.smolverse?.tokens?.[0];
-  const peekabooMetadata = metadataData.shared?.tokens?.[0];
+  const sharedMetadata = metadataData.shared?.tokens?.[0];
   const realmMetadata = metadataData.realm?.[0];
   const tokenMetadata = metadataData.token?.token?.metadata ?? undefined;
 
@@ -264,7 +264,7 @@ export default function TokenDetail() {
     bridgeworldMetadata,
     metadataData.founders,
     undefined,
-    peekabooMetadata,
+    sharedMetadata,
     realmMetadata,
     smolverseMetadata,
     tokenMetadata

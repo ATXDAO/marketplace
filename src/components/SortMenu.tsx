@@ -59,7 +59,6 @@ export function SortMenu({ mobileFilterButtonSlot, options }: SortMenuProps) {
         <Menu.Items className="origin-top-left absolute right-0 z-10 mt-2 w-56 rounded-md shadow-2xl bg-white dark:bg-gray-700 ring-1 ring-black ring-opacity-5 focus:outline-none">
           <div className="py-1">
             {options.map((option, index) => {
-              // console.log(router);
               const sort = [option.value, option.direction].join(":");
               const active = query.sort ? query.sort === sort : index === 0;
 

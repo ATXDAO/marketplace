@@ -176,7 +176,6 @@ const formatSearchFilter = (search: string | undefined) => {
         values = value.split(",");
     }
 
-    console.log({ values, key });
     return [...acc, ...values.map((v) => `${key},${v}`)];
   }, []);
 };
@@ -505,7 +504,12 @@ const Collection = () => {
             (acc, { tokens, id }) => {
               tokens.forEach((token) => {
                 const [, ...parts] = id.split("-");
-                const key = parts.join("-");
+                const key = parts
+                  .join("-")
+                  .replace(
+                    /(agility|endurance|intelligence|strength|vitality|will)-\d+/,
+                    "$1"
+                  );
 
                 acc[key] ??= [];
                 acc[key] = [...acc[key], token.id];
