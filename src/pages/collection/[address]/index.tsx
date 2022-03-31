@@ -296,7 +296,8 @@ const Collection = () => {
         !isSmolverseItem &&
         !isBattleflyItem &&
         !isShared &&
-        !isRealm,
+        !isRealm &&
+        !isTreasure,
       select: React.useCallback(
         ({
           metadataAttributes,
@@ -484,7 +485,7 @@ const Collection = () => {
         Object.keys(filters).length > 0 &&
         isShared,
     }))
-  );
+  ).filter((query) => query.status !== "idle");
   const filteredSharedTokens = React.useMemo(() => {
     if (filteredSharedTokensQueries.length === 0) {
       return { data: undefined };
@@ -655,6 +656,16 @@ const Collection = () => {
       listedTokens.data,
     ]
   );
+  console.log(tokenIds, [
+    searchedTokens.data,
+    filteredBattleflyTokens.data,
+    filteredSharedTokens.data,
+    filteredRealmTokens.data,
+    filteredTreasureTokens.data,
+    filteredBridgeworldTokens.data,
+    filteredSmolTokens.data,
+    listedTokens.data,
+  ]);
   const listings = useInfiniteQuery(
     ["listings", isERC1155, erc721Ordering, orderDirection, tokenIds],
     ({ pageParam = 0 }) =>
@@ -700,7 +711,7 @@ const Collection = () => {
     () => client.getCollectionMetadata({ ids: listingIds }),
     {
       enabled:
-        !!listingIds &&
+        listingIds.length > 0 &&
         !isBridgeworldItem &&
         !isSmolverseItem &&
         !isShared &&
@@ -714,7 +725,7 @@ const Collection = () => {
     ["bw-metadata", listingIds],
     () => bridgeworld.getBridgeworldMetadata({ ids: listingIds }),
     {
-      enabled: !!listingIds && isBridgeworldItem,
+      enabled: listingIds.length > 0 && isBridgeworldItem,
       refetchInterval: false,
       keepPreviousData: true,
     }
@@ -724,7 +735,7 @@ const Collection = () => {
     ["sv-metadata", listingIds],
     () => smolverse.getSmolverseMetadata({ ids: listingIds }),
     {
-      enabled: !!listingIds && isSmolverseItem,
+      enabled: listingIds.length > 0 && isSmolverseItem,
       refetchInterval: false,
       keepPreviousData: true,
     }
@@ -734,7 +745,7 @@ const Collection = () => {
     ["shared-metadata", listingIds],
     () => metadata.getTokenMetadata({ ids: listingIds }),
     {
-      enabled: !!listingIds && isShared,
+      enabled: listingIds.length > 0 && isShared,
       refetchInterval: false,
       keepPreviousData: true,
     }
@@ -747,7 +758,7 @@ const Collection = () => {
         ids: listingIds.map((item) => `${parseInt(item.slice(45), 16)}`),
       }),
     {
-      enabled: !!listingIds && isRealm,
+      enabled: listingIds.length > 0 && isRealm,
       refetchInterval: false,
       keepPreviousData: true,
     }
