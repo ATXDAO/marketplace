@@ -296,7 +296,7 @@ const Header = () => {
                       setSushiModalOpen(true);
                     }}
                   >
-                    Purchase $MAGIC
+                    Purchase $ATX
                   </button>
                 </div>
                 <div className="flow-root">
@@ -314,7 +314,7 @@ const Header = () => {
                       <span className="text-white block">
                         {formatNumber(parseFloat(formatEther(magicBalance)))}
                       </span>{" "}
-                      <span className="text-white block ml-2">$MAGIC</span>
+                      <span className="text-white block ml-2">$ATX</span>
                     </div>
                     <div className="flex items-center justify-center px-2 sm:px-3 py-2 rounded-lg dark:bg-gray-800 bg-red-600 text-white text-xs sm:text-sm">
                       {shortenAddress(account)}
@@ -393,7 +393,7 @@ const Header = () => {
                       className="hidden text-gray-700 lg:block px-4 py-2 text-sm whitespace-nowrap dark:text-gray-200"
                       onClick={() => setSushiModalOpen(true)}
                     >
-                      Purchase $MAGIC
+                      Purchase $ATX
                     </button>
                     <div className="flex items-center">
                       {account ? (
@@ -404,9 +404,7 @@ const Header = () => {
                                 parseFloat(formatEther(magicBalance))
                               )}
                             </span>{" "}
-                            <span className="text-white block ml-2">
-                              $MAGIC
-                            </span>
+                            <span className="text-white block ml-2">$ATX</span>
                           </div>
                           <div className="flex items-center px-2 sm:px-3 py-2 rounded-lg dark:bg-gray-800 bg-red-600 text-white text-xs sm:text-sm">
                             {shortenAddress(account)}

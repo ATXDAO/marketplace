@@ -1,7 +1,4 @@
-# Treasure Marketplace
-<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-12-orange.svg?style=flat-square)](#contributors-)
-<!-- ALL-CONTRIBUTORS-BADGE:END -->
+# ATXDAO Marketplace
 
 This is the source code for Treasure Marketplace frontend. Check out the [subgraph repo](https://github.com/TreasureProject/treasure-marketplace-subgraph) for the API integration part.
 
@@ -34,45 +31,3 @@ After that, in order to automatically generate type-safe graphql queries, run th
 `yarn watch:codegen`
 
 Every time you make changes to `queries.graphql.ts`, the watcher will check if that query exists in the endpoint, and if it does, spits out appropriate typesafe query for you.
-
-## Contributing
-
-Feature Request:
-
-- Please make an discussion under Discussions, and we will move it to issues if we think its necessary.
-
-PR/Issues (Bug):
-- Make an issue first, then fork the repo, create a PR and tag `wyze` or `jcheese1` and we will review!
-
-## Contributors ✨
-
-Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/docs/en/emoji-key)):
-
-<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
-<!-- prettier-ignore-start -->
-<!-- markdownlint-disable -->
-<table>
-  <tr>
-    <td align="center"><a href="https://neilkistner.com/"><img src="https://avatars.githubusercontent.com/u/186971?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Neil Kistner</b></sub></a><br /><a href="https://github.com/TreasureProject/treasure-marketplace/commits?author=wyze" title="Code">💻</a> <a href="#ideas-wyze" title="Ideas, Planning, & Feedback">🤔</a></td>
-    <td align="center"><a href="https://github.com/jcheese1"><img src="https://avatars.githubusercontent.com/u/15570714?v=4?s=100" width="100px;" alt=""/><br /><sub><b>jc</b></sub></a><br /><a href="#ideas-jcheese1" title="Ideas, Planning, & Feedback">🤔</a> <a href="https://github.com/TreasureProject/treasure-marketplace/commits?author=jcheese1" title="Code">💻</a> <a href="#design-jcheese1" title="Design">🎨</a></td>
-    <td align="center"><a href="http://treasure.tools"><img src="https://avatars.githubusercontent.com/u/95452264?v=4?s=100" width="100px;" alt=""/><br /><sub><b>0xkarel</b></sub></a><br /><a href="https://github.com/TreasureProject/treasure-marketplace/commits?author=0xkarel" title="Documentation">📖</a> <a href="https://github.com/TreasureProject/treasure-marketplace/commits?author=0xkarel" title="Code">💻</a></td>
-    <td align="center"><a href="https://www.linkedin.com/in/peitalin"><img src="https://avatars.githubusercontent.com/u/4037878?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Peita Lin</b></sub></a><br /><a href="https://github.com/TreasureProject/treasure-marketplace/commits?author=peitalin" title="Code">💻</a></td>
-    <td align="center"><a href="http://malcosaurus.com"><img src="https://avatars.githubusercontent.com/u/3385743?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Malcolm</b></sub></a><br /><a href="https://github.com/TreasureProject/treasure-marketplace/commits?author=mmnavarr" title="Code">💻</a></td>
-    <td align="center"><a href="https://github.com/Caranell"><img src="https://avatars.githubusercontent.com/u/9637757?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Anton Lyachek</b></sub></a><br /><a href="https://github.com/TreasureProject/treasure-marketplace/commits?author=Caranell" title="Code">💻</a></td>
-    <td align="center"><a href="https://github.com/magiclars-off"><img src="https://avatars.githubusercontent.com/u/62888804?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Lars</b></sub></a><br /><a href="https://github.com/TreasureProject/treasure-marketplace/commits?author=magiclars-off" title="Code">💻</a></td>
-  </tr>
-  <tr>
-    <td align="center"><a href="https://www.linkedin.com/in/ananian"><img src="https://avatars.githubusercontent.com/u/1013230?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Alec Ananian</b></sub></a><br /><a href="https://github.com/TreasureProject/treasure-marketplace/commits?author=alecananian" title="Code">💻</a></td>
-    <td align="center"><a href="https://github.com/asharma13524"><img src="https://avatars.githubusercontent.com/u/28710772?v=4?s=100" width="100px;" alt=""/><br /><sub><b>dark horse</b></sub></a><br /><a href="https://github.com/TreasureProject/treasure-marketplace/commits?author=asharma13524" title="Code">💻</a></td>
-    <td align="center"><a href="https://github.com/dsldsl"><img src="https://avatars.githubusercontent.com/u/50015?v=4?s=100" width="100px;" alt=""/><br /><sub><b>dan levine</b></sub></a><br /><a href="https://github.com/TreasureProject/treasure-marketplace/commits?author=dsldsl" title="Code">💻</a></td>
-    <td align="center"><a href="https://github.com/davidagustin"><img src="https://avatars.githubusercontent.com/u/30575095?v=4?s=100" width="100px;" alt=""/><br /><sub><b>David Agustin</b></sub></a><br /><a href="https://github.com/TreasureProject/treasure-marketplace/commits?author=davidagustin" title="Code">💻</a></td>
-    <td align="center"><a href="https://github.com/zelkibuilds"><img src="https://avatars.githubusercontent.com/u/94715286?v=4?s=100" width="100px;" alt=""/><br /><sub><b>zelkibuilds</b></sub></a><br /><a href="https://github.com/TreasureProject/treasure-marketplace/commits?author=zelkibuilds" title="Code">💻</a></td>
-  </tr>
-</table>
-
-<!-- markdownlint-restore -->
-<!-- prettier-ignore-end -->
-
-<!-- ALL-CONTRIBUTORS-LIST:END -->
-
-This project follows the [all-contributors](https://github.com/all-contributors/all-contributors) specification. Contributions of any kind welcome!

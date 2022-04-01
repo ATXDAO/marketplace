@@ -1,6 +1,6 @@
 import Image from "next/image";
 
-import logoImg from "../../public/img/logotransparent.png";
+import logoImg from "../../public/img/atxdao-preview.png";
 import Link from "next/link";
 
 const collections = [
@@ -107,11 +107,11 @@ export default function Home() {
         <div className="z-10 px-8 max-w-2xl lg:max-w-7xl mx-auto">
           <div className="lg:max-w-[70%]">
             <Image
-              alt="Treasure Marketplace Logo"
+              alt="ATXDAO Marketplace Logo"
               src={logoImg.src}
               width={logoImg.width}
               height={logoImg.height}
-              className="dark:filter dark:invert"
+              className=""
             />
             <p className="text-right font-semibold tracking-wider mt-2 text-lg">
               MARKETPLACE
