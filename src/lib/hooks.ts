@@ -664,7 +664,7 @@ export function useMetadata(
   const isTreasureItem = collectionName === "Treasures";
   const isShared = METADATA_COLLECTIONS.includes(collectionName);
   const isRealm = collectionName === "Realm";
-  const isSmithonia = (collectionName = "Smithonia Weapons");
+  const isSmithonia = collectionName === "Smithonia Weapons";
   const collection = useCollection(collectionName);
 
   const legacyMetadataResult = useQuery(
