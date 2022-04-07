@@ -8596,10 +8596,10 @@ use-debounce@^7.0.1:
   resolved "https://registry.yarnpkg.com/use-debounce/-/use-debounce-7.0.1.tgz#380e6191cc13ad29f8e2149a12b5c37cc2891190"
   integrity sha512-fOrzIw2wstbAJuv8PC9Vg4XgwyTLEOdq4y/Z3IhVl8DAE4svRcgyEUvrEXu+BMNgMoc3YND6qLT61kkgEKXh7Q==
 
-use-local-storage-state@^15.0.0:
-  version "15.0.0"
-  resolved "https://registry.yarnpkg.com/use-local-storage-state/-/use-local-storage-state-15.0.0.tgz#fc012654bc459798efd66c574e52414abab949d7"
-  integrity sha512-0Dh4DiqgsxpyZDa7PRNs7Mct9OHqTuuZl/V3zzPwNJaR9NVuO4HAZdKSJeelgq8h8bE83ZKMlXMLWzMRxu3ZLg==
+use-local-storage-state@^17.0.1:
+  version "17.0.1"
+  resolved "https://registry.yarnpkg.com/use-local-storage-state/-/use-local-storage-state-17.0.1.tgz#7679e08ad973205018283172b1c9bc1080aabf72"
+  integrity sha512-e0UzIgWF9SzqGv7QnFKcOSK+2oP1fN/tImN69Thj8z13g8CYfgkAEdvMWCktuiEcZ+/pTiiBXj8hSu5EHxkrsQ==
 
 use-sidecar@^1.0.1:
   version "1.0.5"
